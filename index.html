@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>mytempo</title>
+    <meta name="description" content="Planner automático que organiza tus tareas según tu energía." />
+    <meta name="theme-color" content="#f5f0e6" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      // El tema se aplica antes de pintar para evitar el parpadeo.
+      try {
+        var t = localStorage.getItem("mytempo.theme");
+        if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+        else if (matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.theme = "dark";
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>mytempo necesita JavaScript para funcionar.</noscript>
+    <script type="module" src="src/ui/app.js"></script>
+  </body>
+</html>
