@@ -1,0 +1,11 @@
+{
+  "name": "mytempo",
+  "version": "0.1.0",
+  "description": "Planner automático que organiza tus tareas según tu energía personal.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/",
+    "start": "python3 -m http.server 8080"
+  }
+}
