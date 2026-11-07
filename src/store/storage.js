@@ -51,6 +51,14 @@ export function createStore(backend) {
       write(KEYS.checkins, all.slice(-500)); // alcanza para detectar patrones, sin crecer sin límite
     },
 
+    /** Completa el foco del último check-in (se pregunta después de la energía, es opcional). */
+    setLastCheckinFocus(focus) {
+      const all = read(KEYS.checkins, []);
+      if (!all.length) return;
+      all[all.length - 1].focus = focus;
+      write(KEYS.checkins, all);
+    },
+
     /** Todo en un solo JSON, para respaldo o para pasar de un dispositivo a otro. */
     exportAll() {
       return JSON.stringify(
