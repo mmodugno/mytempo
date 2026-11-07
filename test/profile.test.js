@@ -81,6 +81,15 @@ test("rechaza archivos que no sirven", () => {
   assert.throws(() => store.importAll("{}"), /perfil/);
 });
 
+test("el foco se agrega después al último check-in", () => {
+  const store = createStore(memoryBackend());
+  store.setLastCheckinFocus(2); // sin check-ins: no hace nada ni rompe
+  store.addCheckin({ energy: 4, at: new Date(2026, 10, 9, 10, 0) });
+  assert.equal(store.getCheckins()[0].focus, null);
+  store.setLastCheckinFocus(2);
+  assert.equal(store.getCheckins()[0].focus, 2);
+});
+
 test("guarda como máximo 500 check-ins", () => {
   const store = createStore(memoryBackend());
   for (let i = 0; i < 510; i++) store.addCheckin({ energy: 3, at: new Date(2026, 10, 9, 10, 0) });
