@@ -3,6 +3,7 @@
 import { h, hm, dur, shortDate, EFFORT_LABEL } from "../dom.js";
 import { app, getPlan, undoTask } from "../state.js";
 import { openTaskSheet } from "./tasksheet.js";
+import { REPEAT_LABEL } from "../../engine/repeat.js";
 
 let showDone = false;
 let rerender = () => {};
@@ -10,6 +11,7 @@ export const onTareasChange = (fn) => (rerender = fn);
 
 export function renderTareas() {
   const plan = getPlan();
+  const laterIds = new Set(plan.later.map((l) => l.taskId));
   const where = new Map(); // taskId -> primer bloque planificado
   for (const day of plan.days) {
     for (const it of day.items) if (it.type === "task" && !where.has(it.taskId)) where.set(it.taskId, { date: day.date, ...it });
@@ -31,7 +33,7 @@ export function renderTareas() {
     root.append(h("div", { class: "empty" }, h("b", null, "Todo al día."), "Escribí una tarea abajo, por ejemplo: ", h("i", null, "Lavar la ropa 30m mañana"), "."));
   } else {
     root.append(h("div", { class: "eyebrow" }, `Pendientes · ${pending.length}`));
-    pending.forEach((t) => root.append(taskRow(t, where.get(t.id), unplaced.has(t.id))));
+    pending.forEach((t) => root.append(taskRow(t, where.get(t.id), unplaced.has(t.id), laterIds.has(t.id))));
   }
 
   if (done.length) {
@@ -43,9 +45,10 @@ export function renderTareas() {
   return root;
 }
 
-function taskRow(t, slot, noRoom) {
-  const when = slot ? `${shortDate(slot.date).split(" ")[0]} ${hm(slot.start)}` : "—";
-  const bits = [dur(t.minutes), EFFORT_LABEL[t.effort], t.due ? `vence ${shortDate(t.due)}` : null, noRoom ? "sin lugar por ahora" : null].filter(Boolean);
+function taskRow(t, slot, noRoom, later) {
+  const when = slot ? `${shortDate(slot.date).split(" ")[0]} ${hm(slot.start)}` : later ? "luego" : "—";
+  const steps = t.subtasks?.length ? `${t.subtasks.filter((x) => x.done).length}/${t.subtasks.length} pasos` : null;
+  const bits = [dur(t.minutes), EFFORT_LABEL[t.effort], t.due ? `vence ${shortDate(t.due)}` : null, t.repeat ? `↻ ${REPEAT_LABEL[t.repeat]}` : null, steps, noRoom ? "sin lugar por ahora" : null, later && t.notBefore ? `desde ${shortDate(t.notBefore.slice(0, 10))}` : null].filter(Boolean);
   return h(
     "button",
     { class: "row", onclick: () => openTaskSheet(t) },
