@@ -113,7 +113,7 @@ test("con el perfil de ejemplo, lo exigente cae en las mañanas libres y lo livi
   assert.equal(r.unplaced.length, 0);
 });
 
-test("con el perfil de ejemplo nada pisa cerámica, pilates ni el trabajo", () => {
+test("con el perfil de ejemplo nada pisa los horarios fijos", () => {
   const tasks = Array.from({ length: 25 }, (_, i) => ({ id: `t${i}`, title: `T${i}`, minutes: 30, status: "todo" }));
   const r = plan(ejemplo, tasks, new Date(2026, 10, 9, 8, 0)); // lunes
   for (const day of r.days) {
