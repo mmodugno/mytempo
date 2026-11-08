@@ -153,3 +153,20 @@ test("es una función pura: no modifica sus entradas", () => {
   plan(profile, tasks, lunes10);
   assert.equal(JSON.stringify({ profile, tasks }), snapshot);
 });
+
+test("un compromiso puntual bloquea solo ese día y se identifica para poder editarlo", () => {
+  const withCourse = {
+    ...profile,
+    oneOffBlocks: [{ id: "curso1", title: "Curso", date: "2026-11-11", start: "19:30", end: "22:00" }],
+  };
+  const tasks = Array.from({ length: 40 }, (_, i) => task(`t${i}`, { minutes: 30, effort: "light" }));
+  const r = plan(withCourse, tasks, lunes8);
+  const miercoles = r.days.find((d) => d.date === "2026-11-11");
+  const curso = miercoles.items.find((i) => i.title === "Curso");
+  assert.equal(curso.oneOffId, "curso1");
+  for (const t of miercoles.items.filter((i) => i.type === "task")) {
+    assert.ok(t.end <= curso.start || t.start >= curso.end, "ninguna tarea pisa el curso");
+  }
+  const jueves = r.days.find((d) => d.date === "2026-11-12");
+  assert.ok(!jueves.items.some((i) => i.title === "Curso"));
+});
