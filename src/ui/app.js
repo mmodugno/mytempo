@@ -4,6 +4,7 @@ import { h, clear, DAY_LONG, MONTHS } from "./dom.js";
 import { app, init, subscribe, tick, addTask } from "./state.js";
 import { parseQuickTask } from "../engine/parse.js";
 import { toast } from "./components.js";
+import { reschedule } from "./notifications.js";
 import { renderAhora } from "./views/ahora.js";
 import { renderTareas, onTareasChange } from "./views/tareas.js";
 import { renderSemana } from "./views/semana.js";
@@ -89,6 +90,7 @@ onTareasChange(render);
 subscribe(() => {
   tick();
   render();
+  reschedule();
 });
 
 // La hora avanza sola: refrescamos cada medio minuto, salvo que esté escribiendo en un campo del contenido.
@@ -101,11 +103,13 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
     tick();
     render();
+    reschedule(); // si el teléfono durmió la app, avisa lo que quedó pendiente
   }
 });
 
 tick();
 render();
+reschedule();
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});
