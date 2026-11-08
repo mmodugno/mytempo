@@ -1,7 +1,7 @@
 // Pantalla principal: qué hacer ahora y lo que sigue. Sin la lista completa.
 
 import { h, hm, dur, EFFORT_LABEL, DAY_LONG } from "../dom.js";
-import { app, getPlan, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
+import { app, getPlan, toggleSubtask, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
 import { dayStrip, toast } from "../components.js";
 import { parseHM, minutesOfDay } from "../../engine/time.js";
 
@@ -62,6 +62,7 @@ function hero({ awake, current, nextTask, today, nowMin }) {
       h("div", { class: "label" }, "Ahora"),
       h("h1", null, current.title),
       h("div", { class: "meta" }, `Hasta las ${hm(current.end)} · ${dur(current.end - current.start)} · ${EFFORT_LABEL[current.effort]}${parts}`),
+      t.subtasks?.length ? checklist(t) : null,
       h(
         "div",
         { class: "actions" },
@@ -150,4 +151,19 @@ function checkinCard() {
 
 function scale(onPick) {
   return h("div", { class: "scale" }, [1, 2, 3, 4, 5].map((n) => h("button", { onclick: () => onPick(n), "aria-label": `${n} de 5` }, String(n))));
+}
+
+function checklist(task) {
+  return h(
+    "div",
+    { class: "checklist" },
+    task.subtasks.map((s) =>
+      h(
+        "button",
+        { class: `sub-row ${s.done ? "is-done" : ""}`, onclick: () => toggleSubtask(task.id, s.id), "aria-pressed": s.done },
+        h("span", { class: `check ${s.done ? "on" : ""}` }, s.done ? "✓" : ""),
+        h("span", { class: s.done ? "done" : "" }, s.title)
+      )
+    )
+  );
 }
