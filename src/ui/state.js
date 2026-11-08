@@ -5,6 +5,7 @@ import { plan } from "../engine/planner.js";
 import { effectiveProfile } from "../engine/learn.js";
 import { addDays, startOfDay, ceilTo, minutesOfDay, parseHM } from "../engine/time.js";
 import { nextOccurrence } from "../engine/repeat.js";
+import { estimate, actualFrom } from "../engine/estimate.js";
 
 export const app = {
   store: null,
@@ -15,6 +16,7 @@ export const app = {
   now: new Date(),
   onboarding: false,
   checkinSnoozedUntil: 0,
+  askDuration: null, // id de la tarea recién completada sobre la que preguntamos cuánto tardó
 };
 
 const listeners = new Set();
@@ -87,13 +89,17 @@ function saveTasks() {
 }
 
 export function addTask(data) {
+  // Si no indicó duración o esfuerzo, estimamos según la tarea y lo que ya cargó antes.
+  const est = estimate(data.title, app.tasks);
   app.tasks.push({
     id: uid(),
     title: data.title,
-    minutes: data.minutes ?? 30,
+    minutes: data.minutes ?? est.minutes,
+    minutesAuto: data.minutes == null,
+    effortAuto: data.effort == null,
     due: data.due ?? null,
     priority: data.priority ?? 2,
-    effort: data.effort ?? "medium",
+    effort: data.effort ?? est.effort,
     repeat: data.repeat ?? null,
     subtasks: data.subtasks ?? [],
     status: "todo",
@@ -119,6 +125,7 @@ export function completeTask(id) {
   if (!t) return;
   t.status = "done";
   t.doneAt = app.now.toISOString();
+  app.askDuration = id;
   const patch = nextOccurrence(t, app.now);
   if (patch) {
     const next = { ...t, ...patch, id: uid(), createdAt: app.now.toISOString() };
@@ -137,7 +144,22 @@ export function undoTask(id) {
   t.status = "todo";
   t.doneAt = null;
   delete t.nextId;
+  delete t.actualMinutes;
+  if (app.askDuration === id) app.askDuration = null;
   saveTasks();
+}
+
+/** "¿Cuánto tardó?": menos / previsto / mas. Alimenta las estimaciones futuras. */
+export function answerDuration(id, answer) {
+  const t = app.tasks.find((x) => x.id === id);
+  app.askDuration = null;
+  if (t) t.actualMinutes = actualFrom(t.minutes, answer);
+  saveTasks();
+}
+
+export function dismissDuration() {
+  app.askDuration = null;
+  emit();
 }
 
 export function toggleSubtask(taskId, subId) {

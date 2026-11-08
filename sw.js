@@ -1,7 +1,7 @@
 // Service worker: la app funciona sin conexión. Primero intenta la red (para ver siempre la última versión)
 // y si no hay, responde desde el caché.
 
-const CACHE = "mytempo-v2";
+const CACHE = "mytempo-v3";
 const FILES = [
   ".",
   "index.html",
@@ -15,6 +15,7 @@ const FILES = [
   "src/engine/energy.js",
   "src/engine/planner.js",
   "src/engine/parse.js",
+  "src/engine/estimate.js",
   "src/engine/learn.js",
   "src/engine/summary.js",
   "src/engine/repeat.js",
