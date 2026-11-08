@@ -6,6 +6,8 @@ import { effectiveProfile } from "../engine/learn.js";
 import { addDays, startOfDay, ceilTo, minutesOfDay, parseHM } from "../engine/time.js";
 import { nextOccurrence } from "../engine/repeat.js";
 import { estimate, actualFrom } from "../engine/estimate.js";
+import { syncRoutine } from "../store/routine.js";
+import { streakStats, ACCESSORIES } from "../engine/streak.js";
 
 export const app = {
   store: null,
@@ -16,6 +18,7 @@ export const app = {
   now: new Date(),
   onboarding: false,
   checkinSnoozedUntil: 0,
+  cheer: null, // { until: ms, points, id } reacción de la mascota al completar
   askDuration: null, // id de la tarea recién completada sobre la que preguntamos cuánto tardó
 };
 
@@ -37,6 +40,17 @@ export function init(backend) {
   app.tasks = app.store.getTasks();
   app.checkins = app.store.getCheckins();
   app.onboarding = !app.store.hasProfile();
+  applyRoutine();
+}
+
+/** Mantiene las tareas de la rutina diaria al día (crea, actualiza o saca lo que corresponda). */
+function applyRoutine() {
+  if (!app.profile || app.onboarding) return;
+  const r = syncRoutine(app.profile.routine, app.tasks, app.now, uid);
+  if (r.changed) {
+    app.tasks = r.tasks;
+    app.store.saveTasks(app.tasks);
+  }
 }
 
 export function tick() {
@@ -65,6 +79,31 @@ export function getPlan() {
     cache = { key, value: plan(profile, app.tasks, app.now, { days: 7, checkin: activeCheckin() }) };
   }
   return cache.value;
+}
+
+/** Racha, puntos y nivel, calculados desde las tareas hechas (memoizado igual que el plan). */
+let statsCache = null;
+export function stats() {
+  const key = `${version}|${Math.floor(app.now.getTime() / 60000)}`;
+  if (statsCache?.key !== key) statsCache = { key, value: streakStats(app.tasks, app.now, { rest: app.profile.streakRest ?? 1 }) };
+  return statsCache.value;
+}
+
+let cheerTimer = null;
+function cheer(before, after, id) {
+  app.cheer = {
+    id,
+    points: after.total - before.total,
+    streak: after.current,
+    newDay: !before.todayDone,
+    levelUp: after.level.level > before.level.level,
+    accessory: ACCESSORIES.find((a) => before.best < a.at && after.best >= a.at) ?? null,
+  };
+  clearTimeout(cheerTimer);
+  cheerTimer = setTimeout(() => {
+    app.cheer = null;
+    emit();
+  }, 6000);
 }
 
 /** ¿Es momento de preguntar cómo se siente? Cada ~4 h, solo mientras está despierta. */
@@ -123,6 +162,7 @@ export function removeTask(id) {
 export function completeTask(id) {
   const t = app.tasks.find((x) => x.id === id);
   if (!t) return;
+  const before = stats();
   t.status = "done";
   t.doneAt = app.now.toISOString();
   app.askDuration = id;
@@ -133,6 +173,8 @@ export function completeTask(id) {
     t.nextId = next.id;
     app.tasks.push(next);
   }
+  version += 1; // invalida el cálculo de racha antes de comparar
+  cheer(before, stats(), id);
   saveTasks();
 }
 
@@ -146,6 +188,7 @@ export function undoTask(id) {
   delete t.nextId;
   delete t.actualMinutes;
   if (app.askDuration === id) app.askDuration = null;
+  if (app.cheer?.id === id) app.cheer = null;
   saveTasks();
 }
 
@@ -184,6 +227,7 @@ export function skipToday(id) {
 export function saveProfile(profile) {
   app.store.saveProfile(profile);
   app.profile = profile;
+  applyRoutine();
   emit();
 }
 
@@ -209,5 +253,6 @@ export function reload() {
   app.tasks = app.store.getTasks();
   app.checkins = app.store.getCheckins();
   app.onboarding = !app.store.hasProfile();
+  applyRoutine();
   emit();
 }

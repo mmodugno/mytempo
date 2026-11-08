@@ -4,17 +4,164 @@
   "wake": "08:00",
   "sleep": "00:00",
   "energy": {
-    "weekday": [1, 1, 1, 1, 1, 1, 1, 2, 3, 5, 5, 5, 4, 3, 3, 4, 3, 3, 3, 2, 2, 2, 1, 1],
-    "weekend": [1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 5, 4, 3, 3, 4, 4, 3, 3, 2, 2, 2, 1, 1]
+    "weekday": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      3,
+      5,
+      5,
+      5,
+      4,
+      3,
+      3,
+      4,
+      3,
+      3,
+      3,
+      2,
+      2,
+      2,
+      1,
+      1
+    ],
+    "weekend": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      3,
+      4,
+      5,
+      5,
+      4,
+      3,
+      3,
+      4,
+      4,
+      3,
+      3,
+      2,
+      2,
+      2,
+      1,
+      1
+    ]
   },
   "breakMinutes": 10,
-  "freeMinutes": { "weekday": 120, "weekend": 240 },
+  "freeMinutes": {
+    "weekday": 120,
+    "weekend": 240
+  },
   "fixedBlocks": [
-    { "id": "b1", "title": "Trabajo", "kind": "work", "days": [1, 2, 3, 4, 5], "start": "09:00", "end": "13:00" },
-    { "id": "b2", "title": "Almuerzo", "kind": "meal", "days": [1, 2, 3, 4, 5], "start": "13:00", "end": "14:00" },
-    { "id": "b3", "title": "Trabajo", "kind": "work", "days": [1, 2, 3, 4, 5], "start": "14:00", "end": "17:30" },
-    { "id": "b4", "title": "Gimnasio", "kind": "commitment", "days": [1, 4], "start": "19:00", "end": "20:00" },
-    { "id": "b5", "title": "Clase de inglés", "kind": "study", "days": [3], "start": "18:30", "end": "20:00" }
+    {
+      "id": "b1",
+      "title": "Trabajo",
+      "kind": "work",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "start": "09:00",
+      "end": "13:00"
+    },
+    {
+      "id": "b2",
+      "title": "Almuerzo",
+      "kind": "meal",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "start": "13:00",
+      "end": "14:00"
+    },
+    {
+      "id": "b3",
+      "title": "Trabajo",
+      "kind": "work",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "start": "14:00",
+      "end": "17:30"
+    },
+    {
+      "id": "b4",
+      "title": "Gimnasio",
+      "kind": "commitment",
+      "days": [
+        1,
+        4
+      ],
+      "start": "19:00",
+      "end": "20:00"
+    },
+    {
+      "id": "b5",
+      "title": "Clase de inglés",
+      "kind": "study",
+      "days": [
+        3
+      ],
+      "start": "18:30",
+      "end": "20:00"
+    }
   ],
-  "oneOffBlocks": []
+  "oneOffBlocks": [],
+  "routine": [
+    {
+      "id": "platos",
+      "title": "Lavar los platos",
+      "minutes": 10,
+      "effort": "light",
+      "repeat": "day",
+      "on": true
+    },
+    {
+      "id": "ordenar",
+      "title": "Ordenar un rato",
+      "minutes": 15,
+      "effort": "light",
+      "repeat": "day",
+      "on": true
+    },
+    {
+      "id": "ejercicio",
+      "title": "Moverme / ejercicio",
+      "minutes": 30,
+      "effort": "medium",
+      "repeat": "day",
+      "on": true
+    },
+    {
+      "id": "agua",
+      "title": "Llenar las botellas de agua",
+      "minutes": 5,
+      "effort": "light",
+      "repeat": "day",
+      "on": true
+    }
+  ],
+  "petName": "Pompón",
+  "streakRest": 1
 }
