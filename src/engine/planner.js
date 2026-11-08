@@ -38,7 +38,11 @@ export function plan(profile, tasks, now, opts = {}) {
   const days = [];
   for (let i = 0; i < horizon; i++) days.push(buildDay(profile, addDays(today, i), now, i === 0));
 
-  const pending = tasks.filter((t) => (t.status ?? "todo") === "todo");
+  // Lo que arranca después del horizonte (ej: la próxima tarea repetida) no cuenta como "sin lugar".
+  const horizonEnd = addDays(today, horizon);
+  const todo = tasks.filter((t) => (t.status ?? "todo") === "todo");
+  const later = todo.filter((t) => t.notBefore && new Date(t.notBefore) >= horizonEnd).map((t) => ({ taskId: t.id, title: t.title, notBefore: t.notBefore }));
+  const pending = todo.filter((t) => !later.some((l) => l.taskId === t.id));
   const chunks = pending.flatMap(toChunks).sort(byUrgency(today));
   const unplaced = [];
   const unplacedSeen = new Set();
@@ -59,6 +63,7 @@ export function plan(profile, tasks, now, opts = {}) {
     generatedAt: now.toISOString(),
     days: days.map(finishDay),
     unplaced,
+    later,
   };
 }
 
