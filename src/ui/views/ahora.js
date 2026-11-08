@@ -1,8 +1,8 @@
 // Pantalla principal: qué hacer ahora y lo que sigue. Sin la lista completa.
 
 import { h, hm, dur, EFFORT_LABEL, DAY_LONG } from "../dom.js";
-import { app, getPlan, toggleSubtask, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
-import { dayStrip, toast } from "../components.js";
+import { app, getPlan, effective, activeCheckin, toggleSubtask, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
+import { dayStrip, energyNow, toast } from "../components.js";
 import { parseHM, minutesOfDay } from "../../engine/time.js";
 
 export function renderAhora() {
@@ -21,9 +21,16 @@ export function renderAhora() {
 
   const root = h("div");
   if (askFocus || checkinDue()) root.append(checkinCard());
-  root.append(hero({ awake, current, nextTask, today, nowMin }));
+  const heroEl = hero({ awake, current, nextTask, today, nowMin });
+  if (awake) {
+    const level = Math.round(energyNow(effective(), now, activeCheckin()));
+    heroEl.append(
+      h("div", { class: "energy-now", role: "img", "aria-label": `Energía estimada ahora: ${level} de 5` }, h("span", null, "energía"), [1, 2, 3, 4, 5].map((n) => h("i", { class: n <= level ? "on" : "" })))
+    );
+  }
+  root.append(heroEl);
 
-  root.append(h("div", { class: "eyebrow" }, "Tu día"), dayStrip(app.profile, today, now));
+  root.append(h("div", { class: "eyebrow" }, "Tu día"), dayStrip(effective(), today, now, { checkin: activeCheckin() }));
 
   // Si el hero ya muestra la próxima tarea, no la repetimos en la lista.
   const heroShowsNext = awake && current?.type !== "task" && nextTask;

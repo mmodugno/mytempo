@@ -52,11 +52,14 @@ export function activeCheckin() {
   return { energy: last.energy, at };
 }
 
+/** Perfil con la curva efectiva (declarada + aprendida), para dibujar y planificar. */
+export const effective = () => effectiveProfile(app.profile, app.checkins, app.now);
+
 export function getPlan() {
   const key = `${version}|${Math.floor(app.now.getTime() / 60000)}`;
   if (cache?.key !== key) {
     // El plan usa la curva aprendida (lo declarado + lo que dicen los check-ins).
-    const profile = effectiveProfile(app.profile, app.checkins, app.now);
+    const profile = effective();
     cache = { key, value: plan(profile, app.tasks, app.now, { days: 7, checkin: activeCheckin() }) };
   }
   return cache.value;

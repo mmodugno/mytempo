@@ -65,17 +65,47 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .btn:active { transform: translateY(1px); }
 .btn.block { width: 100%; }
 
-/* ---------- Franja del día ---------- */
-.strip { position: relative; height: 58px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--paper-2); margin-top: 6px; }
-.strip .seg { position: absolute; top: 0; bottom: 0; }
-.strip .seg.fixed { background: repeating-linear-gradient(135deg, var(--fixed) 0 5px, transparent 5px 10px); opacity: 0.9; }
-.strip .seg.task { top: 12px; bottom: 12px; background: var(--accent); border-radius: 5px; }
-.strip .seg.task.light { opacity: 0.55; }
-.strip .nowline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+/* ---------- Curva del día ---------- */
+.wave-wrap { margin-top: 6px; }
+.wave { position: relative; }
+.curvebox { position: relative; }
+.wave-svg { display: block; width: 100%; height: 92px; overflow: visible; }
+.wave.compact .wave-svg { height: 44px; }
+.w-grid { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.w-line { fill: none; stroke: rgb(var(--sun)); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.w-base { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 4; opacity: 0.7; vector-effect: non-scaling-stroke; }
+.lane { position: relative; height: 30px; margin-top: 6px; border-radius: 8px; overflow: hidden; background: var(--paper-2); border: 1px solid var(--line); }
+.wave.compact .lane { height: 16px; margin-top: 4px; border-radius: 5px; }
+.lane .seg { position: absolute; top: 0; bottom: 0; }
+.lane .seg.fixed { background: repeating-linear-gradient(135deg, var(--fixed) 0 5px, transparent 5px 10px); }
+.lane .seg.task { top: 4px; bottom: 4px; background: var(--accent); border-radius: 5px; }
+.wave.compact .lane .seg.task { top: 2px; bottom: 2px; border-radius: 3px; }
+.lane .seg.task.light { opacity: 0.55; }
+.nowline { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px dashed var(--ink); opacity: 0.55; pointer-events: none; }
+.nowdot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); border: 2.5px solid var(--paper); box-shadow: 0 0 0 1px var(--accent); }
+.nowdot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; animation: pulse 2.4s ease-out infinite; }
 .strip-ticks { position: relative; height: 18px; font-size: 11px; color: var(--muted); }
 .strip-ticks span { position: absolute; transform: translateX(-50%); top: 3px; }
 .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 2px; flex-wrap: wrap; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+/* ---------- Movimiento (sutil) ---------- */
+@keyframes pulse { 0% { transform: scale(0.6); opacity: 0.7; } 70%, 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+main.enter .w-line { stroke-dasharray: 1; animation: draw 1s ease-out both; }
+main.enter .hero, main.enter .row, main.enter .day, main.enter .stat, main.enter .note { animation: rise 380ms ease-out both; }
+main.enter .lane .seg.task { transform-origin: left; animation: grow 600ms 300ms ease-out both; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- Energía ahora ---------- */
+.hero { position: relative; }
+.energy-now { position: absolute; top: 12px; right: 0; display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+.energy-now i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.energy-now i.on { background: rgb(var(--sun)); }
+.energy-now span { margin-right: 5px; letter-spacing: 0.08em; text-transform: uppercase; }
+.logo { display: inline-block; width: 26px; height: 14px; margin-right: 6px; vertical-align: -1px; }
 
 /* ---------- Listas ---------- */
 .row { display: flex; gap: 12px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--line); width: 100%; text-align: left; background: none; border-left: 0; border-right: 0; border-top: 0; }

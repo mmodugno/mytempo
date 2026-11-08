@@ -2,7 +2,7 @@
 
 import { h, clear, hm, DAY_SHORT } from "./dom.js";
 import { parseHM, isWeekend } from "../engine/time.js";
-import { DEFAULT_ENERGY } from "../engine/energy.js";
+import { DEFAULT_ENERGY, energyInterp, checkinShift } from "../engine/energy.js";
 import { newBlockId } from "../store/profile.js";
 
 /* ---------- Hojas y avisos ---------- */
@@ -35,10 +35,28 @@ export function toast(msg) {
   toastTimer = setTimeout(() => el.remove(), 2600);
 }
 
-/* ---------- Franja del día ---------- */
+/* ---------- Curva del día ---------- */
 
-/** Línea de tiempo de hoy: el fondo dorado es tu energía, lo rayado son bloques fijos, lo terracota son tareas. */
-export function dayStrip(profile, day, now, showNow = true) {
+const SVG_NS = "http://www.w3.org/2000/svg";
+function svg(tag, attrs = {}, ...children) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  children.forEach((c) => el.append(c));
+  return el;
+}
+
+let waveId = 0;
+
+/**
+ * El día como una curva: la onda dorada es tu energía (se hunde si marcaste cansancio),
+ * debajo van los horarios fijos (rayado) y las tareas (terracota), y el punto es "ahora".
+ * @param {object} profile  perfil con la curva efectiva
+ * @param {object} day      día del plan
+ * @param {Date} now
+ * @param {{ showNow?: boolean, compact?: boolean, checkin?: object|null }} [opts]
+ */
+export function dayStrip(profile, day, now, { showNow = true, compact = false, checkin = null } = {}) {
+  const id = `w${(waveId += 1)}`;
   const wake = parseHM(profile.wake);
   let sleep = parseHM(profile.sleep);
   if (sleep <= wake) sleep += 1440;
@@ -47,44 +65,81 @@ export function dayStrip(profile, day, now, showNow = true) {
 
   const date = new Date(day.date + "T00:00:00");
   const curve = isWeekend(date) ? profile.energy.weekend : profile.energy.weekday;
-  const stops = [];
-  for (let m = wake; m <= sleep; m += 30) {
-    const level = curve[Math.floor((m % 1440) / 60)];
-    stops.push(`rgba(var(--sun), ${(0.06 + (level / 5) * 0.5).toFixed(2)}) ${pct(m).toFixed(1)}%`);
-  }
-  const strip = h("div", { class: "strip", style: `background-image: linear-gradient(to right, ${stops.join(", ")})` });
+  const W = 1000;
+  const H = 100;
+  const yOf = (e) => H - 8 - ((Math.min(5, Math.max(1, e)) - 1) / 4) * (H - 24); // 1 abajo, 5 arriba
+  const xOf = (m) => ((m - wake) / span) * W;
+  const valueAt = (m, withCheckin) => {
+    const e = energyInterp(curve, m % 1440);
+    return withCheckin && checkin ? e + checkinShift(profile, date, m % 1440, checkin) : e;
+  };
+  const pathFor = (withCheckin) => {
+    const pts = [];
+    for (let m = wake; m <= sleep; m += 15) pts.push(`${xOf(m).toFixed(1)} ${yOf(valueAt(m, withCheckin)).toFixed(1)}`);
+    return "M" + pts.join(" L");
+  };
 
+  const line = pathFor(true);
+  const area = `${line} L${W} ${H} L0 ${H} Z`;
+  const grid = [];
+  for (let hour = Math.ceil(wake / 180) * 3; hour * 60 < sleep; hour += 3) grid.push(svg("line", { x1: xOf(hour * 60), x2: xOf(hour * 60), y1: 0, y2: H, class: "w-grid" }));
+
+  const chart = svg(
+    "svg",
+    { class: "wave-svg", viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", "aria-hidden": "true" },
+    svg("defs", {}, svg("linearGradient", { id: `${id}-g`, x1: 0, x2: 0, y1: 0, y2: 1 }, svg("stop", { offset: "0%", "stop-color": "rgb(var(--sun))", "stop-opacity": 0.6 }), svg("stop", { offset: "100%", "stop-color": "rgb(var(--sun))", "stop-opacity": 0.05 }))),
+    ...grid,
+    svg("path", { d: area, fill: `url(#${id}-g)` }),
+    checkin ? svg("path", { d: pathFor(false), class: "w-base" }) : null,
+    svg("path", { d: line, class: "w-line", pathLength: 1 })
+  );
+
+  const lane = h("div", { class: "lane" });
   for (const it of day.items) {
     if (it.type === "break") continue;
     const left = pct(it.start);
     const width = pct(it.end) - left;
     if (width <= 0) continue;
-    const cls = it.type === "fixed" ? "fixed" : `task ${it.effort === "light" ? "light" : ""}`;
-    strip.append(h("div", { class: `seg ${cls}`, style: `left:${left}%;width:${width}%`, title: it.title }));
+    lane.append(h("div", { class: `seg ${it.type === "fixed" ? "fixed" : `task ${it.effort === "light" ? "light" : ""}`}`, style: `left:${left}%;width:${width}%` }));
   }
+
+  const wave = h("div", { class: `wave ${compact ? "compact" : ""}`, role: "img", "aria-label": "Tu día: energía, horarios fijos y tareas" }, h("div", { class: "curvebox" }, chart), lane);
+
   if (showNow) {
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const m = nowMin < wake ? nowMin + 1440 : nowMin;
-    if (m >= wake && m <= sleep) strip.append(h("div", { class: "nowline", style: `left:${pct(m)}%` }));
+    if (m >= wake && m <= sleep) {
+      const e = valueAt(m, true);
+      wave.append(h("div", { class: "nowline", style: `left:${pct(m)}%` }));
+      wave.querySelector(".curvebox").append(h("span", { class: "nowdot", style: `left:${pct(m)}%;top:${(yOf(e) / H) * 100}%` }));
+    }
   }
 
-  const ticks = h("div", { class: "strip-ticks" });
-  for (let hour = Math.ceil(wake / 180) * 3; hour * 60 <= sleep; hour += 3) {
-    ticks.append(h("span", { style: `left:${pct(hour * 60)}%` }, String(hour % 24)));
+  const out = h("div", { class: "wave-wrap" }, wave);
+  if (!compact) {
+    const ticks = h("div", { class: "strip-ticks" });
+    for (let hour = Math.ceil(wake / 180) * 3; hour * 60 <= sleep; hour += 3) ticks.append(h("span", { style: `left:${pct(hour * 60)}%` }, String(hour % 24)));
+    out.append(
+      ticks,
+      h(
+        "div",
+        { class: "legend" },
+        h("span", null, h("i", { style: "background:rgba(var(--sun),0.7)" }), "tu energía"),
+        h("span", null, h("i", { style: "background:var(--fixed)" }), "horarios fijos"),
+        h("span", null, h("i", { style: "background:var(--accent)" }), "tareas")
+      )
+    );
   }
-  return h(
-    "div",
-    null,
-    strip,
-    ticks,
-    h(
-      "div",
-      { class: "legend" },
-      h("span", null, h("i", { style: "background:rgba(var(--sun),0.7)" }), "tu energía"),
-      h("span", null, h("i", { style: "background:var(--fixed)" }), "horarios fijos"),
-      h("span", null, h("i", { style: "background:var(--accent)" }), "tareas")
-    )
-  );
+  return out;
+}
+
+/** Energía estimada ahora (1 a 5), con el check-in reciente incluido. */
+export function energyNow(profile, now, checkin) {
+  const date = now;
+  const curve = isWeekend(date) ? profile.energy.weekend : profile.energy.weekday;
+  const m = now.getHours() * 60 + now.getMinutes();
+  const e = energyInterp(curve, m) + (checkin ? checkinShift(profile, date, m, checkin) : 0);
+  return Math.min(5, Math.max(1, e));
 }
 
 /* ---------- Editor de energía ---------- */
