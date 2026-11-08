@@ -44,22 +44,37 @@ El motor (`src/engine/planner.js`) es una función pura: `plan(perfil, tareas, a
 ## Estructura
 
 ```
-src/engine/   motor del plan y parser de carga rápida (funciones puras, sin DOM)
+src/engine/   plan, energía, aprendizaje, resumen, repeticiones, recordatorios y parser (funciones puras, sin DOM)
 src/store/    perfil y almacenamiento local
 src/ui/       pantallas
 data/         perfil de ejemplo
 test/         tests
 ```
 
+## Funciones
+
+- **Plan automático** según tu energía, tus horarios fijos, fechas límite y prioridades, con pausas y tiempo libre protegido.
+- **Aprende de vos:** tus check-ins (energía y foco, dos toques) ajustan tu curva de energía; los datos viejos pesan cada vez menos.
+- **Resumen semanal:** qué lograste, cuándo rendís mejor y sugerencias amables.
+- **Carga rápida en una línea:** `Lavar la ropa 30m #liviana cada semana` (duración, esfuerzo, fecha, prioridad y repetición).
+- **Tareas repetidas** (diarias, semanales, cada 2 semanas, mensuales) y **pasos** (subtareas) con checklist.
+- **Compromisos de un día** (un curso, un turno) y horarios fijos semanales.
+- **Recordatorios** antes de cada tarea (con la app abierta o en segundo plano).
+- **El día como una curva:** tu energía, tus horarios y tus tareas en un solo gráfico; la curva se hunde si marcás cansancio.
+- Modo claro y oscuro, instalable (PWA), funciona sin conexión, exporta e importa tus datos en JSON.
+
 ## Estado
 
-- [x] Esqueleto del proyecto
-- [x] Perfil personalizable y onboarding
-- [x] Motor del plan (energía, horarios fijos, fechas límite, tiempo libre)
-- [x] Pantalla "Ahora", check-ins de energía y replanificación
-- [x] Carga rápida de tareas en una línea (`Estudiar 1h30 #exigente mañana !`)
-- [ ] Resumen semanal y aprendizaje de energía
+- [x] Esqueleto, perfil personalizable y onboarding
+- [x] Motor del plan con tests
+- [x] Pantalla "Ahora", check-ins y replanificación
+- [x] Carga rápida, tareas repetidas y pasos
+- [x] Aprendizaje de energía y resumen semanal
+- [x] Compromisos de un día
+- [x] Recordatorios (web)
+- [x] Identidad visual: curva de energía
 - [ ] Voz
+- [ ] Recordatorios con la app cerrada (requieren la versión Android o un servidor de push)
 - [ ] Publicación en Google Play
 
 ## Licencia
