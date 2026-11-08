@@ -17,6 +17,7 @@ import { avgEnergy } from "./energy.js";
 export const GRID = 15; // los bloques arrancan en múltiplos de 15 min
 export const MAX_CHUNK = 90; // una tarea más larga se parte en bloques de foco de hasta 90 min
 export const DEFAULT_MINUTES = 30;
+export const MIN_TASK = 5; // una tarea corta (ej: lavar los platos, 8 min) no se infla a 15
 export const DAY_PENALTY = 0.15; // preferencia leve por hacer las cosas más temprano
 
 /** A qué nivel de energía apunta cada tipo de esfuerzo. */
@@ -147,7 +148,7 @@ function dayBudget(day) {
 /* ---------- Tareas y orden de colocación ---------- */
 
 function toChunks(task) {
-  const minutes = Math.max(GRID, task.minutes ?? DEFAULT_MINUTES);
+  const minutes = Math.max(MIN_TASK, task.minutes ?? DEFAULT_MINUTES);
   const n = Math.ceil(minutes / MAX_CHUNK);
   const base = Math.floor(minutes / n / 5) * 5; // minutos por parte, múltiplos de 5
   const out = [];
