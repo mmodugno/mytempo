@@ -86,6 +86,7 @@ function buildDay(profile, date, now, isToday) {
     if (b.date !== dateStr) continue;
     occupied.push({
       type: "fixed",
+      oneOffId: b.id ?? null,
       kind: b.kind ?? "commitment",
       title: b.title,
       start: parseHM(b.start),

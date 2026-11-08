@@ -239,6 +239,46 @@ export function blockSheet(block, { onSave, onDelete }) {
   ];
 }
 
+/** Hoja para un compromiso de un solo día (un curso, un turno, una salida). */
+export function oneOffSheet(block, defaultDate, { onSave, onDelete }) {
+  const b = block ? structuredClone(block) : { id: newBlockId(), title: "", kind: "commitment", date: defaultDate, start: "19:00", end: "21:00" };
+  const title = h("input", { type: "text", value: b.title, placeholder: "Ej: Curso, turno médico, cumple", maxLength: 40 });
+  const date = h("input", { type: "date", value: b.date });
+  const start = h("input", { type: "time", value: b.start });
+  const end = h("input", { type: "time", value: b.end });
+  const error = h("p", { class: "small", style: "color:var(--accent);min-height:1.2em", role: "alert" });
+  return [
+    h("h2", null, block ? "Editar compromiso" : "Compromiso de un día"),
+    h("div", { class: "field" }, h("label", null, "Nombre"), title),
+    h("div", { class: "field" }, h("label", null, "Día"), date),
+    h("div", { class: "two" }, h("div", { class: "field" }, h("label", null, "Desde"), start), h("div", { class: "field" }, h("label", null, "Hasta"), end)),
+    error,
+    h(
+      "div",
+      { class: "actions" },
+      h(
+        "button",
+        {
+          class: "btn primary",
+          onclick: () => {
+            b.title = title.value.trim();
+            b.date = date.value;
+            b.start = start.value;
+            b.end = end.value;
+            if (!b.title) return void (error.textContent = "Ponele un nombre.");
+            if (!b.date) return void (error.textContent = "Elegí el día.");
+            if (!b.start || !b.end || parseHM(b.end) <= parseHM(b.start)) return void (error.textContent = "La hora de fin tiene que ser después de la de inicio.");
+            onSave(b);
+          },
+        },
+        "Guardar"
+      ),
+      block && h("button", { class: "btn danger", onclick: () => onDelete(b) }, "Borrar"),
+      h("button", { class: "btn quiet", onclick: closeSheet }, "Cancelar")
+    ),
+  ];
+}
+
 /** Lista legible de días: "Lun, Mié, Vie" */
 export function daysLabel(days) {
   return [1, 2, 3, 4, 5, 6, 0].filter((d) => days.includes(d)).map((d) => DAY_SHORT[d]).join(", ");

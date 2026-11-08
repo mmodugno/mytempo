@@ -1,7 +1,8 @@
 // Ajustes: todo lo que la app sabe de vos se puede cambiar acá.
 
-import { h, clear } from "../dom.js";
+import { h, clear, shortDate } from "../dom.js";
 import { app, saveProfile, reload } from "../state.js";
+import { openOneOff, upcomingOneOffs } from "./oneoff.js";
 import { energyEditor, blockSheet, daysLabel, openSheet, closeSheet, toast } from "../components.js";
 
 export function renderAjustes() {
@@ -86,6 +87,18 @@ export function renderAjustes() {
     );
   drawBlocks();
   root.append(h("div", { class: "eyebrow" }, "Horarios fijos"), blocks, h("button", { class: "btn block", style: "margin-top:12px", onclick: () => editBlock(null) }, "+ Agregar horario fijo"));
+
+  // Compromisos puntuales
+  const ones = upcomingOneOffs();
+  root.append(
+    h("div", { class: "eyebrow" }, "Compromisos de un día"),
+    ...(ones.length
+      ? ones.map((b) =>
+          h("button", { class: "block-item", onclick: () => openOneOff(b) }, h("span", null, h("b", null, b.title), h("small", null, `${shortDate(b.date)} · ${b.start}–${b.end}`)), h("span", { class: "muted" }, "Editar"))
+        )
+      : [h("p", { class: "muted small" }, "Cursos, turnos o salidas de una sola vez. La app los respeta y reacomoda el resto.")]),
+    h("button", { class: "btn block", style: "margin-top:12px", onclick: () => openOneOff() }, "+ Agregar compromiso de un día")
+  );
 
   // Energía
   const learnChips = h("div", { class: "chips" });
