@@ -26,6 +26,18 @@ export function energyAt(profile, date, minute) {
 }
 
 /**
+ * Energía en un minuto del día, interpolada suavemente entre los valores por hora
+ * (el valor de cada hora vale en el centro de esa hora). Sirve para dibujar la curva.
+ */
+export function energyInterp(curve, minute) {
+  const h = minute / 60 - 0.5;
+  const i = Math.floor(h);
+  const f = h - i;
+  const at = (n) => curve[((n % 24) + 24) % 24];
+  return at(i) * (1 - f) + at(i + 1) * f;
+}
+
+/**
  * Energía promedio entre [start, end) minutos del día, ponderada por minuto.
  * Si hay un check-in reciente, desplaza la curva y el efecto se va apagando solo.
  */

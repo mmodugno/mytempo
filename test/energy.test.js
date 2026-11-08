@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULT_ENERGY, energyAt, avgEnergy, checkinShift } from "../src/engine/energy.js";
+import { DEFAULT_ENERGY, energyAt, avgEnergy, checkinShift, energyInterp } from "../src/engine/energy.js";
 
 const profile = { energy: DEFAULT_ENERGY };
 const lunes = new Date(2026, 10, 9);
@@ -49,4 +49,18 @@ test("avgEnergy incorpora el check-in y nunca baja de 1 ni pasa de 5", () => {
   const checkin = { energy: 1, at: new Date(2026, 10, 9, 10, 0) };
   const v = avgEnergy(profile, lunes, 10 * 60, 11 * 60, checkin);
   assert.ok(v >= 1 && v < 5);
+});
+
+test("energyInterp vale lo de la hora en su centro y mezcla entre horas", () => {
+  const curve = DEFAULT_ENERGY.weekday;
+  assert.equal(energyInterp(curve, 10 * 60 + 30), curve[10]); // centro de la hora 10
+  const entre = energyInterp(curve, 12 * 60 + 30 + 30); // a mitad de camino entre hora 12 y 13
+  assert.equal(entre, (curve[12] + curve[13]) / 2);
+});
+
+test("energyInterp da la vuelta a medianoche sin romperse", () => {
+  const curve = DEFAULT_ENERGY.weekday;
+  const v = energyInterp(curve, 24 * 60);
+  assert.ok(v >= 1 && v <= 5);
+  assert.equal(energyInterp(curve, 24 * 60 + 30), curve[0]);
 });
