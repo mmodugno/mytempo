@@ -1,6 +1,6 @@
 // Ajustes: todo lo que la app sabe de vos se puede cambiar acá.
 
-import { h, clear, shortDate } from "../dom.js";
+import { h, clear, shortDate, timeField } from "../dom.js";
 import { app, saveProfile, reload } from "../state.js";
 import { openOneOff, upcomingOneOffs } from "./oneoff.js";
 import { supported, getSettings, saveSettings, enable, disable, testNotification } from "../notifications.js";
@@ -20,8 +20,8 @@ export function renderAjustes() {
 
   // Datos básicos
   const name = h("input", { type: "text", value: p.name ?? "", placeholder: "Tu nombre", maxLength: 30, onchange: () => ((p.name = name.value.trim()), commit()) });
-  const wake = h("input", { type: "time", value: p.wake, onchange: () => (wake.value && ((p.wake = wake.value), commit())) });
-  const sleep = h("input", { type: "time", value: p.sleep, onchange: () => (sleep.value && ((p.sleep = sleep.value), commit())) });
+  const wake = timeField(p.wake, { onchange: () => ((p.wake = wake.value), commit()) });
+  const sleep = timeField(p.sleep, { onchange: () => ((p.sleep = sleep.value), commit()) });
   const num = (get, set, max) =>
     h("input", {
       type: "number",

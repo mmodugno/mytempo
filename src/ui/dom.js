@@ -23,6 +23,38 @@ export function h(tag, props, ...children) {
   return el;
 }
 
+/**
+ * Selector de hora en 24 h (hora : minutos de 5 en 5). Reemplaza a <input type="time">,
+ * que cada celular dibuja distinto (AM/PM, reloj de aguja, etc.).
+ * Se usa como un input: `.value` ("HH:MM") y el evento `change`.
+ */
+export function timeField(value = "09:00", props = {}) {
+  const pad = (n) => String(n).padStart(2, "0");
+  let [hh, mm] = value.split(":").map(Number);
+  const hours = h("select", { "aria-label": "Hora", class: "tf-h" });
+  const mins = h("select", { "aria-label": "Minutos", class: "tf-m" });
+  for (let i = 0; i < 24; i++) hours.append(h("option", { value: pad(i) }, pad(i)));
+  const fill = () => {
+    mins.replaceChildren();
+    const steps = new Set(Array.from({ length: 12 }, (_, i) => i * 5));
+    steps.add(mm); // si viene un minuto raro (ej. importado), no lo perdemos
+    [...steps].sort((a, b) => a - b).forEach((m) => mins.append(h("option", { value: pad(m) }, pad(m))));
+    mins.value = pad(mm);
+  };
+  fill();
+  hours.value = pad(hh);
+  const wrap = h("div", { class: "timefield", role: "group", ...props }, hours, h("span", { "aria-hidden": "true" }, ":"), mins);
+  Object.defineProperty(wrap, "value", {
+    get: () => `${hours.value}:${mins.value}`,
+    set: (v) => {
+      [hh, mm] = v.split(":").map(Number);
+      hours.value = pad(hh);
+      fill();
+    },
+  });
+  return wrap;
+}
+
 export function clear(el) {
   while (el.firstChild) el.removeChild(el.firstChild);
   return el;

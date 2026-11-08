@@ -1,6 +1,6 @@
 // Piezas reutilizables: hojas inferiores, avisos, franja del día, editores.
 
-import { h, clear, hm, DAY_SHORT } from "./dom.js";
+import { h, clear, hm, timeField, DAY_SHORT } from "./dom.js";
 import { parseHM, isWeekend } from "../engine/time.js";
 import { DEFAULT_ENERGY, energyInterp, checkinShift } from "../engine/energy.js";
 import { newBlockId } from "../store/profile.js";
@@ -228,8 +228,8 @@ export const KIND_OPTIONS = [
 export function blockSheet(block, { onSave, onDelete }) {
   const b = block ? structuredClone(block) : { id: newBlockId(), title: "", kind: "commitment", days: [1, 2, 3, 4, 5], start: "09:00", end: "10:00" };
   const title = h("input", { type: "text", value: b.title, placeholder: "Ej: Trabajo, Pilates, Viaje", maxLength: 40 });
-  const start = h("input", { type: "time", value: b.start });
-  const end = h("input", { type: "time", value: b.end });
+  const start = timeField(b.start);
+  const end = timeField(b.end);
   const dayChips = h("div", { class: "chips" });
   const kindChips = h("div", { class: "chips" });
   const error = h("p", { class: "small", style: "color:var(--accent);min-height:1.2em", role: "alert" });
@@ -299,8 +299,8 @@ export function oneOffSheet(block, defaultDate, { onSave, onDelete }) {
   const b = block ? structuredClone(block) : { id: newBlockId(), title: "", kind: "commitment", date: defaultDate, start: "19:00", end: "21:00" };
   const title = h("input", { type: "text", value: b.title, placeholder: "Ej: Curso, turno médico, cumple", maxLength: 40 });
   const date = h("input", { type: "date", value: b.date });
-  const start = h("input", { type: "time", value: b.start });
-  const end = h("input", { type: "time", value: b.end });
+  const start = timeField(b.start);
+  const end = timeField(b.end);
   const error = h("p", { class: "small", style: "color:var(--accent);min-height:1.2em", role: "alert" });
   return [
     h("h2", null, block ? "Editar compromiso" : "Compromiso de un día"),
