@@ -1,7 +1,8 @@
 // La semana completa, día por día.
 
 import { h, hm, dur, shortDate, DAY_LONG } from "../dom.js";
-import { getPlan, app } from "../state.js";
+import { getPlan, app, effective, activeCheckin } from "../state.js";
+import { dayStrip } from "../components.js";
 import { openOneOff } from "./oneoff.js";
 
 export function renderSemana() {
@@ -15,6 +16,7 @@ export function renderSemana() {
       { class: `day ${idx === 0 ? "is-today" : ""}` },
       h("h3", null, idx === 0 ? "Hoy" : cap(DAY_LONG[day.dow]), h("small", null, shortDate(day.date).split(" ").slice(1).join(" "), ` · libre ${dur(Math.max(0, day.freeMinutes))}`))
     );
+    section.append(dayStrip(effective(), day, app.now, { showNow: idx === 0, compact: true, checkin: idx === 0 ? activeCheckin() : null }));
     if (!items.length) section.append(h("div", { class: "row" }, h("span", { class: "what muted" }, "Día libre")));
     items.forEach((i) => {
       const fixed = i.type === "fixed";
