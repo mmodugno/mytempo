@@ -1,7 +1,7 @@
 // Pantalla principal: qué hacer ahora y lo que sigue. Sin la lista completa.
 
 import { h, hm, dur, EFFORT_LABEL, DAY_LONG } from "../dom.js";
-import { app, getPlan, effective, activeCheckin, toggleSubtask, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
+import { app, getPlan, effective, activeCheckin, toggleSubtask, answerDuration, dismissDuration, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
 import { dayStrip, energyNow, toast } from "../components.js";
 import { parseHM, minutesOfDay } from "../../engine/time.js";
 
@@ -20,7 +20,9 @@ export function renderAhora() {
   const nextTask = upcoming.find((i) => i.type === "task");
 
   const root = h("div");
-  if (askFocus || checkinDue()) root.append(checkinCard());
+  const justDone = app.askDuration && app.tasks.find((t) => t.id === app.askDuration);
+  if (justDone) root.append(durationCard(justDone));
+  else if (askFocus || checkinDue()) root.append(checkinCard());
   const heroEl = hero({ awake, current, nextTask, today, nowMin });
   if (awake) {
     const level = Math.round(energyNow(effective(), now, activeCheckin()));
@@ -172,5 +174,23 @@ function checklist(task) {
         h("span", { class: s.done ? "done" : "" }, s.title)
       )
     )
+  );
+}
+
+/* ---------- ¿Cuánto tardó? ---------- */
+
+function durationCard(task) {
+  return h(
+    "div",
+    { class: "checkin" },
+    h("p", null, `¿Cuánto tardó «${task.title}»?`),
+    h(
+      "div",
+      { class: "actions", style: "margin:0" },
+      h("button", { class: "btn", onclick: () => answerDuration(task.id, "menos") }, "Menos"),
+      h("button", { class: "btn", onclick: () => answerDuration(task.id, "previsto") }, `Lo previsto (${dur(task.minutes)})`),
+      h("button", { class: "btn", onclick: () => answerDuration(task.id, "mas") }, "Más")
+    ),
+    h("button", { class: "skip", onclick: dismissDuration }, "Saltar")
   );
 }

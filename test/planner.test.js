@@ -170,3 +170,9 @@ test("un compromiso puntual bloquea solo ese día y se identifica para poder edi
   const jueves = r.days.find((d) => d.date === "2026-11-12");
   assert.ok(!jueves.items.some((i) => i.title === "Curso"));
 });
+
+test("una tarea corta no se infla: 10 minutos ocupan 10 minutos", () => {
+  const r = plan(profile, [task("platos", { minutes: 10, effort: "light" })], lunes10);
+  const [t] = itemsOf(r);
+  assert.equal(t.end - t.start, 10);
+});
