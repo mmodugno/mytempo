@@ -3,6 +3,7 @@
 import { h, clear, shortDate } from "../dom.js";
 import { app, saveProfile, reload } from "../state.js";
 import { openOneOff, upcomingOneOffs } from "./oneoff.js";
+import { supported, getSettings, saveSettings, enable, disable, testNotification } from "../notifications.js";
 import { energyEditor, blockSheet, daysLabel, openSheet, closeSheet, toast } from "../components.js";
 
 export function renderAjustes() {
@@ -114,6 +115,39 @@ export function renderAjustes() {
     energyEditor(p.energy, commit),
     h("div", { class: "field", style: "margin-top:18px" }, h("span", { class: "lbl" }, "¿Ajustar mi curva con lo que dicen mis check-ins?"), learnChips)
   );
+
+  // Recordatorios
+  const notif = h("div");
+  const drawNotif = () => {
+    clear(notif);
+    if (!supported()) {
+      notif.append(h("p", { class: "muted small" }, "Este navegador no permite notificaciones. En la versión Android van a funcionar."));
+      return;
+    }
+    const cfg = getSettings();
+    const active = cfg.on && Notification.permission === "granted";
+    notif.append(
+      h("div", { class: "chips" },
+        h("button", { class: `chip ${active ? "on" : ""}`, onclick: async () => {
+          const res = await enable();
+          if (res === "denied") toast("El permiso está bloqueado: habilitalo en la configuración del navegador.");
+          drawNotif();
+        } }, "Avisarme antes de cada tarea"),
+        h("button", { class: `chip ${!active ? "on" : ""}`, onclick: () => (disable(), drawNotif()) }, "Sin avisos")
+      )
+    );
+    if (active) {
+      notif.append(
+        h("div", { class: "field", style: "margin-top:14px" }, h("span", { class: "lbl" }, "Con cuánta anticipación"),
+          h("div", { class: "chips" }, [5, 10, 15, 30].map((m) => h("button", { class: `chip ${cfg.lead === m ? "on" : ""}`, onclick: () => (saveSettings({ ...cfg, lead: m }), drawNotif()) }, `${m} min`)))
+        ),
+        h("button", { class: "btn quiet", onclick: testNotification }, "Probar un aviso")
+      );
+    }
+    notif.append(h("p", { class: "muted small" }, "Por ahora los avisos suenan mientras la app esté abierta o en segundo plano. Para que lleguen con la app cerrada hace falta la versión Android."));
+  };
+  drawNotif();
+  root.append(h("div", { class: "eyebrow" }, "Recordatorios"), notif);
 
   // Apariencia
   const themeNow = localStorage.getItem("mytempo.theme") ?? "auto";

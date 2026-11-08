@@ -1,7 +1,7 @@
 // Service worker: la app funciona sin conexión. Primero intenta la red (para ver siempre la última versión)
 // y si no hay, responde desde el caché.
 
-const CACHE = "mytempo-v1";
+const CACHE = "mytempo-v2";
 const FILES = [
   ".",
   "index.html",
@@ -15,6 +15,10 @@ const FILES = [
   "src/engine/energy.js",
   "src/engine/planner.js",
   "src/engine/parse.js",
+  "src/engine/learn.js",
+  "src/engine/summary.js",
+  "src/engine/repeat.js",
+  "src/engine/reminders.js",
   "src/store/profile.js",
   "src/store/storage.js",
   "src/ui/app.js",
@@ -27,6 +31,9 @@ const FILES = [
   "src/ui/views/ajustes.js",
   "src/ui/views/onboarding.js",
   "src/ui/views/tasksheet.js",
+  "src/ui/views/resumen.js",
+  "src/ui/views/oneoff.js",
+  "src/ui/notifications.js",
 ];
 
 self.addEventListener("install", (e) => {
@@ -52,5 +59,16 @@ self.addEventListener("fetch", (e) => {
         return res;
       })
       .catch(() => caches.match(e.request).then((hit) => hit ?? caches.match("index.html")))
+  );
+});
+
+// Al tocar un aviso, abre (o trae al frente) la app.
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => "focus" in c);
+      return open ? open.focus() : self.clients.openWindow(".");
+    })
   );
 });
