@@ -7,12 +7,19 @@ const DAYS = {
   domingo: 0, lunes: 1, martes: 2, miercoles: 3, miércoles: 3, jueves: 4, viernes: 5, sabado: 6, sábado: 6,
 };
 
+const REPEATS = [
+  ["2weeks", /\s(cada 2 semanas|cada dos semanas|quincenal)(?=\s)/i],
+  ["week", /\s(cada semana|todas las semanas|semanal)(?=\s)/i],
+  ["month", /\s(cada mes|todos los meses|mensual)(?=\s)/i],
+  ["day", /\s(todos los dias|cada dia|diari[oa])(?=\s)/i],
+];
+
 const strip = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 /**
  * @param {string} text
  * @param {Date} now
- * @returns {{ title: string, minutes?: number, due?: string, priority?: number, effort?: string }}
+ * @returns {{ title: string, minutes?: number, due?: string, priority?: number, effort?: string, repeat?: string }}
  */
 export function parseQuickTask(text, now = new Date()) {
   let rest = ` ${text.trim()} `;
@@ -41,6 +48,16 @@ export function parseQuickTask(text, now = new Date()) {
     out.effort = { liviana: "light", media: "medium", exigente: "hard" }[e.toLowerCase()];
     return " ";
   });
+
+  // Repetición: todos los días, cada semana, cada 2 semanas, cada mes (en ese orden, de lo más específico a lo general)
+  for (const [repeat, re] of REPEATS) {
+    const m = strip(rest).match(re);
+    if (m) {
+      out.repeat = repeat;
+      rest = rest.slice(0, m.index) + " " + rest.slice(m.index + m[0].length);
+      break;
+    }
+  }
 
   // Fecha límite: hoy, mañana, o un día de la semana (el próximo que venga)
   const dayMatch = strip(rest).match(/\s(hoy|manana|domingo|lunes|martes|miercoles|jueves|viernes|sabado)(?=\s)/i);
