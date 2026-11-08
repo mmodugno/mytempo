@@ -52,3 +52,22 @@ test("no confunde números del título con duración", () => {
 test("palabras que contienen un día no se tocan", () => {
   assert.equal(parseQuickTask("Comprar lunetas", lunes).due, undefined);
 });
+
+test("repeticiones", () => {
+  assert.equal(parseQuickTask("Lavar la ropa cada semana", lunes).repeat, "week");
+  assert.equal(parseQuickTask("Regar plantas todos los días 10m", lunes).repeat, "day");
+  assert.equal(parseQuickTask("Cambiar sábanas cada 2 semanas", lunes).repeat, "2weeks");
+  assert.equal(parseQuickTask("Pagar alquiler mensual", lunes).repeat, "month");
+});
+
+test("la repetición se saca del título y convive con duración y esfuerzo", () => {
+  const r = parseQuickTask("Lavar la ropa cada semana 30m #liviana", lunes);
+  assert.equal(r.title, "Lavar la ropa");
+  assert.equal(r.repeat, "week");
+  assert.equal(r.minutes, 30);
+  assert.equal(r.effort, "light");
+});
+
+test("sin repetición no inventa el campo", () => {
+  assert.equal(parseQuickTask("Lavar la ropa", lunes).repeat, undefined);
+});
