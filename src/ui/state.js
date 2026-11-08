@@ -4,6 +4,7 @@ import { createStore } from "../store/storage.js";
 import { plan } from "../engine/planner.js";
 import { effectiveProfile } from "../engine/learn.js";
 import { addDays, startOfDay, ceilTo, minutesOfDay, parseHM } from "../engine/time.js";
+import { nextOccurrence } from "../engine/repeat.js";
 
 export const app = {
   store: null,
@@ -90,6 +91,8 @@ export function addTask(data) {
     due: data.due ?? null,
     priority: data.priority ?? 2,
     effort: data.effort ?? "medium",
+    repeat: data.repeat ?? null,
+    subtasks: data.subtasks ?? [],
     status: "todo",
     createdAt: app.now.toISOString(),
   });
@@ -107,8 +110,39 @@ export function removeTask(id) {
   saveTasks();
 }
 
-export const completeTask = (id) => updateTask(id, { status: "done", doneAt: app.now.toISOString() });
-export const undoTask = (id) => updateTask(id, { status: "todo", doneAt: null });
+/** Completa la tarea. Si se repite, deja lista la siguiente para su fecha. */
+export function completeTask(id) {
+  const t = app.tasks.find((x) => x.id === id);
+  if (!t) return;
+  t.status = "done";
+  t.doneAt = app.now.toISOString();
+  const patch = nextOccurrence(t, app.now);
+  if (patch) {
+    const next = { ...t, ...patch, id: uid(), createdAt: app.now.toISOString() };
+    delete next.nextId;
+    t.nextId = next.id;
+    app.tasks.push(next);
+  }
+  saveTasks();
+}
+
+export function undoTask(id) {
+  const t = app.tasks.find((x) => x.id === id);
+  if (!t) return;
+  // Si al completarla se creó la siguiente repetición y sigue intacta, la sacamos.
+  if (t.nextId) app.tasks = app.tasks.filter((x) => !(x.id === t.nextId && x.status === "todo"));
+  t.status = "todo";
+  t.doneAt = null;
+  delete t.nextId;
+  saveTasks();
+}
+
+export function toggleSubtask(taskId, subId) {
+  const t = app.tasks.find((x) => x.id === taskId);
+  const s = t?.subtasks?.find((x) => x.id === subId);
+  if (s) s.done = !s.done;
+  saveTasks();
+}
 
 /** "Más tarde": la tarea no se vuelve a ofrecer en la próxima hora y media. */
 export function snoozeTask(id) {
