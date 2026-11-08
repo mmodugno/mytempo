@@ -7,6 +7,7 @@ import { toast } from "./components.js";
 import { renderAhora } from "./views/ahora.js";
 import { renderTareas, onTareasChange } from "./views/tareas.js";
 import { renderSemana } from "./views/semana.js";
+import { renderResumen } from "./views/resumen.js";
 import { renderAjustes } from "./views/ajustes.js";
 import { renderOnboarding } from "./views/onboarding.js";
 import { openTaskSheet } from "./views/tasksheet.js";
@@ -15,6 +16,7 @@ const TABS = [
   ["ahora", "Ahora", renderAhora],
   ["tareas", "Tareas", renderTareas],
   ["semana", "Semana", renderSemana],
+  ["resumen", "Resumen", renderResumen],
   ["ajustes", "Ajustes", renderAjustes],
 ];
 

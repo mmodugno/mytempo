@@ -2,6 +2,7 @@
 
 import { createStore } from "../store/storage.js";
 import { plan } from "../engine/planner.js";
+import { effectiveProfile } from "../engine/learn.js";
 import { addDays, startOfDay, ceilTo, minutesOfDay, parseHM } from "../engine/time.js";
 
 export const app = {
@@ -53,7 +54,9 @@ export function activeCheckin() {
 export function getPlan() {
   const key = `${version}|${Math.floor(app.now.getTime() / 60000)}`;
   if (cache?.key !== key) {
-    cache = { key, value: plan(app.profile, app.tasks, app.now, { days: 7, checkin: activeCheckin() }) };
+    // El plan usa la curva aprendida (lo declarado + lo que dicen los check-ins).
+    const profile = effectiveProfile(app.profile, app.checkins, app.now);
+    cache = { key, value: plan(profile, app.tasks, app.now, { days: 7, checkin: activeCheckin() }) };
   }
   return cache.value;
 }

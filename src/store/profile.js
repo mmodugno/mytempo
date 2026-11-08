@@ -16,6 +16,7 @@ export function defaultProfile() {
     wake: "08:00",
     sleep: "00:00",
     energy: structuredClone(DEFAULT_ENERGY),
+    learn: true, // la curva se ajusta con los check-ins
     breakMinutes: 10,
     freeMinutes: { weekday: 120, weekend: 240 },
     fixedBlocks: [],

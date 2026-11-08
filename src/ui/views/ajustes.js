@@ -88,7 +88,19 @@ export function renderAjustes() {
   root.append(h("div", { class: "eyebrow" }, "Horarios fijos"), blocks, h("button", { class: "btn block", style: "margin-top:12px", onclick: () => editBlock(null) }, "+ Agregar horario fijo"));
 
   // Energía
-  root.append(h("div", { class: "eyebrow" }, "Tu energía"), energyEditor(p.energy, commit));
+  const learnChips = h("div", { class: "chips" });
+  const drawLearn = () => {
+    clear(learnChips);
+    [[true, "Sí, aprender"], [false, "No, usar solo mi curva"]].forEach(([v, label]) =>
+      learnChips.append(h("button", { class: `chip ${(p.learn !== false) === v ? "on" : ""}`, onclick: () => ((p.learn = v), commit(), drawLearn()) }, label))
+    );
+  };
+  drawLearn();
+  root.append(
+    h("div", { class: "eyebrow" }, "Tu energía"),
+    energyEditor(p.energy, commit),
+    h("div", { class: "field", style: "margin-top:18px" }, h("span", { class: "lbl" }, "¿Ajustar mi curva con lo que dicen mis check-ins?"), learnChips)
+  );
 
   // Apariencia
   const themeNow = localStorage.getItem("mytempo.theme") ?? "auto";
