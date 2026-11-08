@@ -5,8 +5,11 @@ import { app, saveProfile, reload } from "../state.js";
 import { defaultProfile } from "../../store/profile.js";
 import { energyEditor, blockSheet, daysLabel, openSheet, closeSheet, toast } from "../components.js";
 import { newBlockId } from "../../store/profile.js";
+import { ROUTINE_CATALOG, fromCatalog, newRoutineId } from "../../store/routine.js";
+import { estimate } from "../../engine/estimate.js";
+import { pomeranianSvg } from "../mascot.js";
 
-const STEPS = 5;
+const STEPS = 6;
 
 export function renderOnboarding() {
   const draft = defaultProfile();
@@ -117,6 +120,48 @@ export function renderOnboarding() {
         h("div", { class: "field" }, h("label", null, "Entre semana (minutos)"), num(() => draft.freeMinutes.weekday, (v) => (draft.freeMinutes.weekday = v), 720)),
         h("div", { class: "field" }, h("label", null, "Fin de semana (minutos)"), num(() => draft.freeMinutes.weekend, (v) => (draft.freeMinutes.weekend = v), 960)),
         h("div", { class: "field" }, h("label", null, "Pausa entre tareas (minutos)"), num(() => draft.breakMinutes, (v) => (draft.breakMinutes = v), 60)),
+        h("div", { class: "spacer" }),
+        nav(),
+      ];
+    },
+    // 5 · Rutina diaria y mascota
+    () => {
+      const list = h("div", { class: "chips" });
+      const custom = h("input", { type: "text", placeholder: "Otra tarea de todos los días", maxLength: 60 });
+      const drawList = () => {
+        clear(list);
+        const toggle = (id, make) => {
+          draft.routine = draft.routine.some((r) => r.id === id) ? draft.routine.filter((r) => r.id !== id) : [...draft.routine, make()];
+          drawList();
+        };
+        ROUTINE_CATALOG.forEach((c) => {
+          const on = draft.routine.some((r) => r.id === c.key);
+          list.append(h("button", { class: `chip ${on ? "on" : ""}`, "aria-pressed": on, onclick: () => toggle(c.key, () => fromCatalog(c)) }, c.title));
+        });
+        draft.routine
+          .filter((r) => !ROUTINE_CATALOG.some((c) => c.key === r.id))
+          .forEach((r) => list.append(h("button", { class: "chip on", "aria-pressed": true, onclick: () => toggle(r.id) }, r.title)));
+      };
+      const addCustom = () => {
+        const title = custom.value.trim();
+        if (!title) return;
+        const e = estimate(title, []);
+        draft.routine.push({ id: newRoutineId(), title, minutes: e.minutes, effort: e.effort, repeat: "day", on: true });
+        custom.value = "";
+        drawList();
+      };
+      custom.addEventListener("keydown", (ev) => ev.key === "Enter" && (ev.preventDefault(), addCustom()));
+      const petName = h("input", { type: "text", value: draft.petName, maxLength: 20, oninput: () => (draft.petName = petName.value.trim() || "Pompón") });
+      const pet = h("div", { class: "pet-dog", style: "width:64px;height:67px;flex:none" });
+      pet.innerHTML = pomeranianSvg({ mood: "happy" });
+      drawList();
+      return [
+        h("h1", null, "Lo de todos los días"),
+        h("p", { class: "lead" }, "Tocá las que hacés seguido y ya te las dejo cargadas, con su duración. Después podés pausarlas o sumar otras en Ajustes."),
+        list,
+        h("div", { class: "field" }, custom, h("button", { class: "btn quiet", style: "margin-top:8px", onclick: addCustom }, "+ Sumar")),
+        h("div", { class: "pet-intro" }, pet, h("div", { class: "field", style: "margin:0;flex:1" }, h("label", null, "Tu mascota se llama"), petName)),
+        h("p", { class: "muted small" }, "Se pone contenta cuando completás tareas y va sumando una racha de días seguidos."),
         h("div", { class: "spacer" }),
         nav(true, "Armar mi semana", finish),
       ];

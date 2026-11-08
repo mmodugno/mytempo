@@ -44,8 +44,8 @@ El motor (`src/engine/planner.js`) es una función pura: `plan(perfil, tareas, a
 ## Estructura
 
 ```
-src/engine/   plan, energía, aprendizaje, resumen, repeticiones, recordatorios y parser (funciones puras, sin DOM)
-src/store/    perfil y almacenamiento local
+src/engine/   plan, energía, aprendizaje, estimación, racha y puntos, resumen, repeticiones, recordatorios y parser (puro, sin DOM)
+src/store/    perfil, rutina diaria y almacenamiento local
 src/ui/       pantallas
 data/         perfil de ejemplo
 test/         tests
@@ -60,6 +60,9 @@ test/         tests
 - **Tareas repetidas** (diarias, semanales, cada 2 semanas, mensuales) y **pasos** (subtareas) con checklist.
 - **Compromisos de un día** (un curso, un turno) y horarios fijos semanales.
 - **Recordatorios** antes de cada tarea (con la app abierta o en segundo plano).
+- **Duraciones realistas:** estima cuánto lleva cada tarea (lavar los platos ≈ 10 min, estudiar ≈ 1 h 30) y aprende de lo que realmente tardás.
+- **Rutina diaria ya cargada:** elegís lo que hacés todos los días en el onboarding y aparece solo; se puede pausar o sumar más en Ajustes.
+- **Mascota y racha:** un pomerania que festeja cada tarea, puntos, niveles y una racha de días seguidos con día de descanso semanal y accesorios que se desbloquean.
 - **El día como una curva:** tu energía, tus horarios y tus tareas en un solo gráfico; la curva se hunde si marcás cansancio.
 - Modo claro y oscuro, instalable (PWA), funciona sin conexión, exporta e importa tus datos en JSON.
 

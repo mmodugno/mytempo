@@ -1,6 +1,9 @@
 // Ajustes: todo lo que la app sabe de vos se puede cambiar acá.
 
-import { h, clear, shortDate, timeField } from "../dom.js";
+import { h, clear, shortDate, timeField, dur } from "../dom.js";
+import { REPEAT_LABEL } from "../../engine/repeat.js";
+import { estimate } from "../../engine/estimate.js";
+import { ROUTINE_CATALOG, fromCatalog, newRoutineId } from "../../store/routine.js";
 import { app, saveProfile, reload } from "../state.js";
 import { openOneOff, upcomingOneOffs } from "./oneoff.js";
 import { supported, getSettings, saveSettings, enable, disable, testNotification } from "../notifications.js";
@@ -49,6 +52,8 @@ export function renderAjustes() {
     h("div", { class: "field" }, h("label", null, "Pausa entre tareas (min)"), num(() => p.breakMinutes, (v) => (p.breakMinutes = v), 60)),
     h("p", { class: "muted small" }, "El tiempo libre es lo que la app nunca llena con tareas.")
   );
+
+  root.append(routineSection(p, commit), petSection(p, commit));
 
   // Horarios fijos
   const blocks = h("div");
@@ -234,5 +239,73 @@ function confirmReset() {
       h("button", { class: "btn danger", onclick: () => ((app.store.clearAll(), closeSheet(), reload())) }, "Sí, borrar"),
       h("button", { class: "btn quiet", onclick: closeSheet }, "Cancelar")
     )
+  );
+}
+
+/* ---------- Rutina diaria ---------- */
+
+function routineSection(p, commit) {
+  p.routine ??= [];
+  const box = h("div");
+  const input = h("input", { type: "text", placeholder: "Otra tarea de todos los días", maxLength: 60 });
+  const draw = () => {
+    clear(box);
+    if (!p.routine.length) box.append(h("p", { class: "muted small" }, "Todavía no tenés tareas de rutina. Elegí algunas abajo y quedan cargadas solas."));
+    p.routine.forEach((r) =>
+      box.append(
+        h(
+          "div",
+          { class: "block-item static" },
+          h("span", null, h("b", null, r.title), h("small", null, `${dur(r.minutes)} · ${REPEAT_LABEL[r.repeat] ?? r.repeat}${r.on ? "" : " · en pausa"}`)),
+          h(
+            "span",
+            { class: "row-actions" },
+            h("button", { class: `chip ${r.on ? "on" : ""}`, "aria-pressed": r.on, onclick: () => ((r.on = !r.on), commit(), draw()) }, r.on ? "Activa" : "Pausada"),
+            h("button", { class: "chip", "aria-label": `Quitar ${r.title}`, onclick: () => ((p.routine = p.routine.filter((x) => x.id !== r.id)), commit(), draw()) }, "Quitar")
+          )
+        )
+      )
+    );
+    const missing = ROUTINE_CATALOG.filter((c) => !p.routine.some((r) => r.id === c.key));
+    if (missing.length) {
+      box.append(
+        h("div", { class: "lbl small muted", style: "margin:14px 0 6px" }, "Sugeridas"),
+        h("div", { class: "chips" }, missing.map((c) => h("button", { class: "chip", onclick: () => (p.routine.push(fromCatalog(c)), commit(), draw()) }, `+ ${c.title}`)))
+      );
+    }
+    box.append(h("div", { class: "field" }, input, h("button", { class: "btn quiet", style: "margin-top:8px", onclick: add }, "+ Sumar otra")));
+  };
+  const add = () => {
+    const title = input.value.trim();
+    if (!title) return;
+    const e = estimate(title, app.tasks);
+    p.routine.push({ id: newRoutineId(), title, minutes: e.minutes, effort: e.effort, repeat: "day", on: true });
+    input.value = "";
+    commit();
+    draw();
+  };
+  input.addEventListener("keydown", (ev) => ev.key === "Enter" && (ev.preventDefault(), add()));
+  draw();
+  return h("div", null, h("div", { class: "eyebrow" }, "Rutina diaria"), box);
+}
+
+/* ---------- Mascota y racha ---------- */
+
+function petSection(p, commit) {
+  const name = h("input", { type: "text", value: p.petName ?? "Pompón", maxLength: 20, onchange: () => ((p.petName = name.value.trim() || "Pompón"), commit()) });
+  const chips = h("div", { class: "chips" });
+  const draw = () => {
+    clear(chips);
+    [[0, "Ninguno"], [1, "1 por semana"], [2, "2 por semana"]].forEach(([v, label]) =>
+      chips.append(h("button", { class: `chip ${(p.streakRest ?? 1) === v ? "on" : ""}`, "aria-pressed": (p.streakRest ?? 1) === v, onclick: () => ((p.streakRest = v), commit(), draw()) }, label))
+    );
+  };
+  draw();
+  return h(
+    "div",
+    null,
+    h("div", { class: "eyebrow" }, "Mascota y racha"),
+    h("div", { class: "field" }, h("label", null, "Nombre de tu mascota"), name),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Días de descanso que no cortan la racha"), chips)
   );
 }

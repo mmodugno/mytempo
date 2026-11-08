@@ -3,11 +3,13 @@
 import { h, dur, DAY_SHORT } from "../dom.js";
 import { app } from "../state.js";
 import { weeklySummary } from "../../engine/summary.js";
+import { petSummary } from "./pet.js";
 
 export function renderResumen() {
   const s = weeklySummary(app.profile, app.tasks, app.checkins, app.now);
   const root = h("div");
 
+  root.append(petSummary());
   root.append(
     h("div", { class: "eyebrow" }, "Tus últimos 7 días"),
     h(

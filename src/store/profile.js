@@ -21,6 +21,9 @@ export function defaultProfile() {
     freeMinutes: { weekday: 120, weekend: 240 },
     fixedBlocks: [],
     oneOffBlocks: [],
+    routine: [], // tareas de todos los días / de la semana que ya vienen cargadas
+    petName: "Pompón",
+    streakRest: 1, // días de descanso por semana que no cortan la racha
   };
 }
 
@@ -71,6 +74,13 @@ export function validateProfile(p) {
     const e = hm(b.end, `${label}, fin`);
     if (s !== null && e !== null && e <= s) errors.push(`${label}: el fin debe ser después del inicio.`);
   });
+
+  (p.routine ?? []).forEach((r, i) => {
+    const label = `Rutina ${i + 1}${r.title ? ` (${r.title})` : ""}`;
+    if (!r.id || !r.title) errors.push(`${label}: falta el nombre.`);
+    if (!(r.minutes >= 1)) errors.push(`${label}: la duración debe ser de 1 minuto o más.`);
+  });
+  if (p.streakRest != null && ![0, 1, 2].includes(p.streakRest)) errors.push("Los días de descanso por semana van de 0 a 2.");
 
   return errors;
 }

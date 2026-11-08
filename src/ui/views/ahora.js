@@ -4,6 +4,7 @@ import { h, hm, dur, EFFORT_LABEL, DAY_LONG } from "../dom.js";
 import { app, getPlan, effective, activeCheckin, toggleSubtask, answerDuration, dismissDuration, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
 import { dayStrip, energyNow, toast } from "../components.js";
 import { parseHM, minutesOfDay } from "../../engine/time.js";
+import { petCard } from "./pet.js";
 
 export function renderAhora() {
   const plan = getPlan();
@@ -20,6 +21,8 @@ export function renderAhora() {
   const nextTask = upcoming.find((i) => i.type === "task");
 
   const root = h("div");
+  // Mientras Pompón festeja, va primero para que la reacción se vea sin hacer scroll.
+  if (app.cheer) root.append(petCard(awake));
   const justDone = app.askDuration && app.tasks.find((t) => t.id === app.askDuration);
   if (justDone) root.append(durationCard(justDone));
   else if (askFocus || checkinDue()) root.append(checkinCard());
@@ -31,6 +34,7 @@ export function renderAhora() {
     );
   }
   root.append(heroEl);
+  if (!app.cheer) root.append(petCard(awake));
 
   root.append(h("div", { class: "eyebrow" }, "Tu día"), dayStrip(effective(), today, now, { checkin: activeCheckin() }));
 
@@ -75,7 +79,7 @@ function hero({ awake, current, nextTask, today, nowMin }) {
       h(
         "div",
         { class: "actions" },
-        h("button", { class: "btn primary", onclick: () => ((completeTask(t.id), toast("¡Hecha! Bien ahí."))) }, "Hecha"),
+        h("button", { class: "btn primary", onclick: () => (completeTask(t.id)) }, "Hecha"),
         h("button", { class: "btn", onclick: () => ((snoozeTask(t.id), toast("Sin drama, la muevo para más tarde."))) }, "Más tarde"),
         h("button", { class: "btn quiet", onclick: () => ((skipToday(t.id), toast("La paso para mañana."))) }, "No hoy")
       )
@@ -97,7 +101,7 @@ function hero({ awake, current, nextTask, today, nowMin }) {
         "div",
         { class: "actions" },
         h("button", { class: "btn", onclick: () => ((skipToday(t.id), toast("La paso para mañana."))) }, "No hoy"),
-        h("button", { class: "btn quiet", onclick: () => ((completeTask(t.id), toast("¡Hecha!"))) }, "Ya la hice")
+        h("button", { class: "btn quiet", onclick: () => (completeTask(t.id)) }, "Ya la hice")
       )
     );
   }
