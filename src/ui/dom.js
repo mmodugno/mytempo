@@ -5,6 +5,10 @@ import { formatHM } from "../engine/time.js";
 export function h(tag, props, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(props ?? {})) {
+    if (k.startsWith("aria-") && typeof v === "boolean") {
+      el.setAttribute(k, String(v)); // aria-pressed="false" también tiene que existir
+      continue;
+    }
     if (v == null || v === false) continue;
     if (k === "class") el.className = v;
     else if (k.startsWith("on")) el.addEventListener(k.slice(2).toLowerCase(), v);
