@@ -1,6 +1,6 @@
 // Primer uso: unas pocas preguntas para armar el perfil. Todo se puede cambiar después en Ajustes.
 
-import { h, clear } from "../dom.js";
+import { h, clear, timeField } from "../dom.js";
 import { app, saveProfile, reload } from "../state.js";
 import { defaultProfile } from "../../store/profile.js";
 import { energyEditor, blockSheet, daysLabel, openSheet, closeSheet, toast } from "../components.js";
@@ -49,8 +49,8 @@ export function renderOnboarding() {
     },
     // 1 · Sueño
     () => {
-      const wake = h("input", { type: "time", value: draft.wake, onchange: () => wake.value && (draft.wake = wake.value) });
-      const sleep = h("input", { type: "time", value: draft.sleep, onchange: () => sleep.value && (draft.sleep = sleep.value) });
+      const wake = timeField(draft.wake, { onchange: () => (draft.wake = wake.value) });
+      const sleep = timeField(draft.sleep, { onchange: () => (draft.sleep = sleep.value) });
       return [
         h("h1", null, "¿Cómo es tu día?"),
         h("p", { class: "lead" }, "Más o menos, en promedio. La app planifica solo entre estas dos horas."),

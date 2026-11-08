@@ -154,6 +154,9 @@ main.enter .lane .seg.task { transform-origin: left; animation: grow 600ms 300ms
 .field { margin: 14px 0; }
 .field > label, .field > .lbl { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
 .field input[type="text"], .field input[type="date"], .field input[type="time"], .field input[type="number"], .field select { width: 100%; min-height: 46px; padding: 0 12px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--paper-2); }
+.timefield { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 4px; }
+.timefield span { font-weight: 600; color: var(--muted); }
+.field .timefield select { width: 100%; min-width: 0; padding: 0 4px; text-align: center; text-align-last: center; font-variant-numeric: tabular-nums; font-size: 18px; appearance: none; -webkit-appearance: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { min-height: 40px; padding: 0 14px; border-radius: 8px; border: 1.5px solid var(--line); background: none; }
 .chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
