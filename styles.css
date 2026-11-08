@@ -217,3 +217,41 @@ main.enter .lane .seg.task { transform-origin: left; animation: grow 600ms 300ms
 .sub-add { display: flex; gap: 8px; margin-top: 6px; }
 .sub-add input { flex: 1; width: 0; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--paper-2); }
 .checklist { margin-top: 12px; }
+
+/* ---------- Mascota y racha ---------- */
+.pet { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 4px 14px; align-items: center; padding: 14px 0 12px; border-bottom: 1px solid var(--line); }
+.pet-dog { flex: none; transform-origin: 50% 90%; }
+.pet-dog.cheer { animation: hop 0.6s ease-out 2; }
+.pet-dog svg { overflow: visible; }
+@keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px) rotate(-3deg); } 70% { transform: translateY(0) rotate(2deg); } }
+.spark { animation: twinkle 0.9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.spark.s2 { animation-delay: 0.3s; }
+@keyframes twinkle { 50% { opacity: 0.35; transform: scale(0.7); } }
+.pet-info { min-width: 0; }
+.pet-name { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.pet-streak { font-family: var(--serif); font-size: 30px; line-height: 1.1; }
+.pet-streak small { font-family: var(--sans, inherit); font-size: 15px; color: var(--muted); }
+.pet-streak.small { font-size: 22px; }
+.pet-sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.pet-bubble { display: grid; gap: 2px; margin: 4px 0; padding: 8px 12px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; animation: rise 0.3s ease-out both; }
+.pet-bubble b { color: var(--accent); font-size: 18px; }
+.pet-bar { height: 6px; margin-top: 8px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.pet-bar i { display: block; height: 100%; border-radius: 3px; background: rgb(var(--sun)); }
+.days7 { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 6px; margin-top: 10px; }
+.sd { flex: 1; text-align: center; font-size: 11px; color: var(--muted); }
+.sd i { display: block; width: 22px; height: 22px; margin: 0 auto 3px; border-radius: 50%; border: 2px solid var(--line); }
+.sd.done i { background: rgb(var(--sun)); border-color: rgb(var(--sun)); }
+.sd.rest i { border-style: dashed; border-color: var(--sage); }
+.sd.today i { border-color: var(--accent); }
+.sd.miss i { background: var(--line); }
+.pet-level { grid-column: 1 / -1; font-size: 12px; color: var(--muted); text-align: right; }
+.pet-sum { display: flex; align-items: center; gap: 12px; }
+.pet-sum .stats { flex: 1; min-width: 0; }
+.accs { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.acc { padding: 6px 12px; border-radius: 999px; border: 1.5px dashed var(--line); color: var(--muted); font-size: 13px; }
+.acc.on { border: 1.5px solid rgb(var(--sun)); color: var(--ink); background: rgba(var(--sun), 0.18); }
+.pet-intro { display: flex; align-items: center; gap: 14px; margin: 18px 0 8px; }
+.block-item.static { cursor: default; flex-wrap: wrap; gap: 8px; }
+.row-actions { display: flex; gap: 6px; }
+.row-actions .chip { min-height: 36px; padding: 0 12px; font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .pet-dog.cheer, .spark, .pet-bubble { animation: none; } }
