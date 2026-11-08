@@ -48,8 +48,12 @@ const composer = h(
   h("button", { class: "add", onclick: submit }, "Sumar")
 );
 
+// Logo: la misma onda del ícono (markup fijo, sin datos de la persona).
+const logo = h("span", { class: "logo", "aria-hidden": "true" });
+logo.innerHTML = '<svg viewBox="0 0 26 14" width="26" height="14"><path d="M1 12.5C6 12.5 8 2.5 13 2.5S20 12.5 25 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="13" cy="2.8" r="2.4" fill="var(--accent)"/></svg>';
+
 root.append(
-  h("header", { class: "topbar" }, h("span", { class: "wordmark" }, "my", h("b", null, "tempo")), today),
+  h("header", { class: "topbar" }, h("span", { class: "wordmark" }, logo, "my", h("b", null, "tempo")), today),
   main,
   h("div", null, composer, tabs)
 );
@@ -79,6 +83,7 @@ function render() {
     tabs.append(h("button", { "aria-current": app.tab === key ? "page" : null, onclick: () => ((app.tab = key), render()) }, label))
   );
 
+  main.classList.toggle("enter", lastTab !== app.tab); // la animación de entrada solo al cambiar de pestaña
   const scroll = lastTab === app.tab ? main.scrollTop : 0;
   const view = TABS.find(([k]) => k === app.tab)[2];
   clear(main).append(view());
