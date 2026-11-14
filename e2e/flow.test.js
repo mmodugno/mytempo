@@ -3,73 +3,18 @@
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
-import { chromium, devices } from "playwright";
-
-const ROOT = new URL("..", import.meta.url).pathname;
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml" };
+import { startServer, launch, openApp, tab, overflow, doneTask } from "./helpers.js";
 
 let server, browser, base;
-const profile = JSON.parse(await readFile(join(ROOT, "data/perfil-ejemplo.json"), "utf8"));
-
 before(async () => {
-  server = createServer(async (req, res) => {
-    try {
-      const path = normalize(new URL(req.url, "http://x").pathname).replace(/^(\.\.[/\\])+/, "");
-      const file = join(ROOT, path === "/" ? "index.html" : path);
-      if (!file.startsWith(ROOT)) throw new Error("fuera de la raíz");
-      res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
-      res.end(await readFile(file));
-    } catch {
-      res.writeHead(404).end();
-    }
-  });
-  await new Promise((r) => server.listen(0, r));
-  base = `http://localhost:${server.address().port}/`;
-  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ["--no-sandbox"] });
+  ({ server, base } = await startServer());
+  browser = await launch();
 });
-
 after(async () => {
   await browser?.close();
   server?.close();
 });
-
-async function open({ voice = false } = {}) {
-  const ctx = await browser.newContext({ ...devices["Pixel 7"], viewport: { width: 384, height: 832 }, locale: "es-AR", timezoneId: "America/Argentina/Buenos_Aires", serviceWorkers: "block" });
-  await ctx.addInitScript((p) => {
-    if (!localStorage.getItem("mytempo.profile")) {
-      localStorage.setItem("mytempo.profile", JSON.stringify(p));
-      localStorage.setItem("mytempo.tasks", "[]");
-      localStorage.setItem("mytempo.checkins", "[]");
-    }
-  }, profile);
-  if (voice) {
-    await ctx.addInitScript(() => {
-      window.SpeechRecognition = window.webkitSpeechRecognition = class {
-        start() {
-          this.onstart();
-          setTimeout(() => {
-            this.onresult({ results: [Object.assign([{ transcript: "llamar al dentista mañana" }], { isFinal: true })] });
-            this.onend();
-          }, 50);
-        }
-        stop() {
-          this.onend();
-        }
-      };
-    });
-  }
-  const page = await ctx.newPage();
-  const errors = [];
-  page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto(base);
-  await page.waitForSelector(".composer");
-  return { ctx, page, errors };
-}
-
-const overflow = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+const open = (o) => openApp(browser, base, o).then(async (r) => (await r.page.waitForSelector(".composer"), r));
 
 test("la rutina diaria aparece sola, sin cargar nada", async () => {
   const { ctx, page, errors } = await open();
