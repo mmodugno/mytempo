@@ -63,7 +63,7 @@ const composer = h(
 
 // Logo: la misma onda del ícono (markup fijo, sin datos de la persona).
 const logo = h("span", { class: "logo", "aria-hidden": "true" });
-logo.innerHTML = '<svg viewBox="0 0 26 14" width="26" height="14"><path d="M1 12.5C6 12.5 8 2.5 13 2.5S20 12.5 25 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="13" cy="2.8" r="2.4" fill="var(--accent)"/></svg>';
+logo.innerHTML = '<svg viewBox="0 0 28 17" width="28" height="17"><path d="M4 13 A10 10 0 0 1 24 13" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round"/><path d="M1.5 15 H26.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="6.5" cy="6.2" r="2.8" fill="rgb(var(--sun, 232 168 56))"/></svg>';
 
 root.append(
   h("header", { class: "topbar" }, h("span", { class: "wordmark" }, logo, "my", h("b", null, "tempo")), today),
