@@ -7,6 +7,10 @@
   "scripts": {
     "test": "node --test \"test/**/*.test.js\"",
     "start": "python3 -m http.server 8080",
-    "android:prepare": "sh scripts/build-www.sh && npx cap sync android"
+    "android:prepare": "sh scripts/build-www.sh && npx cap sync android",
+    "e2e": "node --test \"e2e/**/*.test.js\""
+  },
+  "devDependencies": {
+    "playwright": "^1.65.1"
   }
 }
