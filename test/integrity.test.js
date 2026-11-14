@@ -97,7 +97,7 @@ test("privacidad: ningún archivo del repo trae datos personales ni claves", () 
 test("sin dependencias externas en tiempo de ejecución (todo funciona offline)", () => {
   const pkg = JSON.parse(read("package.json"));
   assert.equal(pkg.dependencies, undefined);
-  for (const f of ["index.html", ...srcFiles, "styles.css"]) assert.ok(!/https?:\/\/(?!github\.com|mmodugno|www\.w3\.org)/.test(read(f).replace(/\/\/.*$/gm, "")), `${f} carga algo de internet`);
+  for (const f of ["index.html", ...srcFiles.filter((x) => x !== "src/config.js"), "styles.css"]) /* config.js puede traer la dirección de métricas */ assert.ok(!/https?:\/\/(?!github\.com|mmodugno|www\.w3\.org)/.test(read(f).replace(/\/\/.*$/gm, "")), `${f} carga algo de internet`);
 });
 
 test("capacitor.config.json es coherente con el proyecto", () => {

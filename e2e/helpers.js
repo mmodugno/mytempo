@@ -28,7 +28,7 @@ export function startServer() {
   return new Promise((resolve) => server.listen(0, () => resolve({ server, base: `http://localhost:${server.address().port}/` })));
 }
 
-export const launch = () => chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ["--no-sandbox"] });
+export const launch = () => chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ["--no-sandbox", "--host-resolver-rules=MAP tienda.test 127.0.0.1"] });
 
 /** "Ahora" de los tests: martes 10 de nov de 2026, 10:00 en Buenos Aires. Así no dependen de la hora en que se corran. */
 export const NOW = new Date("2026-11-10T13:00:00Z");

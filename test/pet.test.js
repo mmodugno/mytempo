@@ -45,5 +45,5 @@ test("la frase es estable en la misma hora, cambia con el contexto y nunca culpa
   assert.equal(phrase({ now, streak: 2, todayDone: false }), phrase({ now: new Date(2026, 10, 9, 10, 55), streak: 2, todayDone: false }));
   assert.ok(phrase({ now, streak: 2, todayDone: true }).length > 5);
   for (const awake of [true, false]) for (const streak of [0, 3, 9]) assert.ok(!/fallaste|perdiste|culpa de vos/i.test(phrase({ now, streak, todayDone: false, awake })));
-  assert.equal(ITEMS.length, 8);
+  assert.equal(ITEMS.length, 10);
 });
