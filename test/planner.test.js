@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { plan } from "../src/engine/planner.js";
 import { DEFAULT_ENERGY } from "../src/engine/energy.js";
-import { parseHM } from "../src/engine/time.js";
+import { parseHM, parseYMD } from "../src/engine/time.js";
 
 // Perfil mínimo: trabajo 9-18 de lunes a viernes, el resto libre.
 const profile = {
@@ -175,4 +175,23 @@ test("una tarea corta no se infla: 10 minutos ocupan 10 minutos", () => {
   const r = plan(profile, [task("platos", { minutes: 10, effort: "light" })], lunes10);
   const [t] = itemsOf(r);
   assert.equal(t.end - t.start, 10);
+});
+
+test("una tarea con días elegidos solo se ubica en esos días", () => {
+  const r = plan(profile, [task("b", { minutes: 30, effort: "medium", days: [6] })], lunes8);
+  const dows = itemsOf(r).filter((i) => i.taskId === "b").map((i) => parseYMD(i.date).getDay());
+  assert.deepEqual(dows, [6]);
+});
+
+test("una tarea de la mañana se ubica por la mañana si hay lugar", () => {
+  const r = plan(profile, [task("m", { minutes: 30, effort: "light", part: "morning" })], lunes8);
+  const it = itemsOf(r).find((i) => i.taskId === "m");
+  assert.ok(it.start >= 300 && it.start < 780, `arrancó a los ${it.start} min`);
+});
+
+test("si no entra en su momento del día, la tarea igual se ubica", () => {
+  const busy = { ...profile, fixedBlocks: [{ title: "Todo el día", kind: "work", days: [0, 1, 2, 3, 4, 5, 6], start: "05:00", end: "13:00" }] };
+  const r = plan(busy, [task("m", { minutes: 30, effort: "light", part: "morning" })], lunes8);
+  assert.equal(r.unplaced.length, 0);
+  assert.ok(itemsOf(r).some((i) => i.taskId === "m"));
 });

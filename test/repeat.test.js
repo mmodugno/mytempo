@@ -60,3 +60,21 @@ test("la siguiente ocurrencia no se planifica antes de su fecha", () => {
   assert.equal(r2.unplaced.length, 0, "no es una tarea sin lugar");
   assert.equal(r2.later.length, 1, "queda anotada para más adelante");
 });
+
+test("con días elegidos, 'todos los días' salta al siguiente día permitido", () => {
+  // Viernes 13 de noviembre de 2026: lunes, miércoles y viernes
+  const n = nextOccurrence({ repeat: "day", days: [1, 3, 5] }, new Date(2026, 10, 13, 10));
+  assert.equal(ymd(new Date(n.notBefore)), "2026-11-16");
+});
+
+test("una tarea semanal de los sábados vuelve el sábado de la semana siguiente", () => {
+  const t = { repeat: "week", days: [6] };
+  assert.equal(ymd(new Date(nextOccurrence(t, new Date(2026, 10, 14, 11)).notBefore)), "2026-11-21"); // hecha el sábado
+  assert.equal(ymd(new Date(nextOccurrence(t, new Date(2026, 10, 12, 11)).notBefore)), "2026-11-21"); // hecha antes (jueves)
+  assert.equal(ymd(new Date(nextOccurrence(t, new Date(2026, 10, 16, 11)).notBefore)), "2026-11-28"); // hecha tarde (lunes)
+});
+
+test("cada 2 semanas con día elegido salta dos semanas", () => {
+  const n = nextOccurrence({ repeat: "2weeks", days: [2] }, new Date(2026, 10, 10, 9));
+  assert.equal(ymd(new Date(n.notBefore)), "2026-11-24");
+});

@@ -22,6 +22,9 @@ export const DAY_PENALTY = 0.15; // preferencia leve por hacer las cosas más te
 
 /** A qué nivel de energía apunta cada tipo de esfuerzo. */
 const TARGET = { hard: 5, medium: 3.5, light: 1.5 };
+/** Momentos del día para las tareas con preferencia horaria (minutos desde medianoche). */
+export const PARTS = { morning: [300, 780], afternoon: [780, 1140], evening: [1140, 1440] };
+const PART_PENALTY = 4; // casi una regla, pero si no entra en ese momento no se pierde la tarea
 const EFFORT_RANK = { hard: 3, medium: 2, light: 1 };
 
 /**
@@ -198,6 +201,7 @@ function placeChunk(profile, days, chunk, today, now, checkin) {
   for (let i = 0; i < days.length; i++) {
     const day = days[i];
     if (due && day.date > due) break;
+    if (task.days?.length && !task.days.includes(day.date.getDay())) continue; // solo ciertos días de la semana
     if (notBefore && addDays(day.date, 1) <= notBefore) continue; // todo el día queda antes del "no antes de"
     const isDueDay = due && day.date.getTime() === due.getTime();
     const budget = dayBudget(day);
@@ -212,7 +216,9 @@ function placeChunk(profile, days, chunk, today, now, checkin) {
       for (; start + minutes <= we; start += GRID) {
         const e = avgEnergy(profile, day.date, start, start + minutes, checkin);
         const dayIdx = diffDays(today, day.date);
-        const score = Math.abs(e - target) + dayIdx * DAY_PENALTY;
+        const [ps, pe] = PARTS[task.part] ?? [0, 1440];
+        const outside = start < ps || start >= pe ? PART_PENALTY : 0;
+        const score = Math.abs(e - target) + dayIdx * DAY_PENALTY + outside;
         if (!best || score < best.score) best = { score, day, start };
       }
     }

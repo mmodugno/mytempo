@@ -27,6 +27,32 @@ function advance(date, repeat) {
   }
 }
 
+const MONDAY_FIRST = [1, 2, 3, 4, 5, 6, 0];
+
+/** Primer día permitido ("days") después de la fecha dada. */
+function nextAllowedDay(date, days) {
+  for (let i = 1; i <= 7; i++) {
+    const d = addDays(date, i);
+    if (days.includes(d.getDay())) return d;
+  }
+  return null;
+}
+
+/**
+ * Con días elegidos (ej: sábados): "todos los días" avanza al siguiente día permitido y las
+ * repeticiones por semana saltan a la semana que corresponde (lunes a domingo), en el primer día permitido.
+ */
+function advanceOnDays(done, repeat, days) {
+  if (repeat === "day") return nextAllowedDay(done, days);
+  if (repeat === "week" || repeat === "2weeks") {
+    const monday = addDays(done, -((done.getDay() + 6) % 7));
+    const first = MONDAY_FIRST.find((d) => days.includes(d));
+    if (first === undefined) return null;
+    return addDays(monday, (repeat === "week" ? 7 : 14) + MONDAY_FIRST.indexOf(first));
+  }
+  return null;
+}
+
 /**
  * Datos para la próxima ocurrencia de una tarea repetida que se acaba de completar.
  * @returns {object|null} campos a pisar en la copia, o null si la tarea no se repite
@@ -34,7 +60,7 @@ function advance(date, repeat) {
 export function nextOccurrence(task, doneAt) {
   if (!task.repeat) return null;
   const done = startOfDay(doneAt);
-  const next = advance(done, task.repeat);
+  const next = (task.days?.length ? advanceOnDays(done, task.repeat, task.days) : null) ?? advance(done, task.repeat);
   if (!next) return null;
 
   let due = null;
