@@ -6,6 +6,12 @@ Un planner automático que conoce tus horarios y tu energía, y organiza tus tar
 
 > En construcción (MVP). Pensado para el celular, funciona como PWA y guarda todo **solo en tu dispositivo**.
 
+<p align="center">
+  <img src="docs/img/ahora.png" width="250" alt="Pantalla Ahora: la próxima tarea y la racha de Pompón">
+  <img src="docs/img/semana.png" width="250" alt="Semana: el día como curva de energía y la agenda">
+  <img src="docs/img/resumen.png" width="250" alt="Resumen: racha, vestidor y semana">
+</p>
+
 ## Idea
 
 Planificar a mano cada día cansa, y casi siempre termino poniendo tareas pesadas cuando estoy cansada y tareas livianas cuando tengo la cabeza clara. mytempo:
@@ -27,15 +33,19 @@ Planificar a mano cada día cansa, y casi siempre termino poniendo tareas pesada
 
 - JavaScript (ES modules), sin framework ni paso de build
 - PWA (manifest + service worker)
-- Tests con el runner nativo de Node (`node --test`)
+- Tests con el runner nativo de Node (`node --test`) y e2e con Playwright
+- Opcional: Capacitor para la versión Android (ver [docs/google-play.md](docs/google-play.md))
 - GitHub Pages + GitHub Actions
 
 ## Correrlo
 
 ```bash
 npm start      # servidor estático en http://localhost:8080
-npm test       # tests del motor
+npm test       # tests unitarios del motor
+npm run e2e    # flujos completos en un navegador real (Playwright; 1ª vez: npx playwright install chromium)
 ```
+
+El CI corre los dos en cada push.
 
 ## Cómo funciona el plan
 
@@ -48,7 +58,9 @@ src/engine/   plan, energía, aprendizaje, estimación, racha y puntos, resumen,
 src/store/    perfil, rutina diaria y almacenamiento local
 src/ui/       pantallas
 data/         perfil de ejemplo
-test/         tests
+test/         tests unitarios
+e2e/          tests de flujo en navegador
+docs/         guía de Google Play y capturas
 ```
 
 ## Funciones
@@ -62,7 +74,10 @@ test/         tests
 - **Recordatorios** antes de cada tarea (con la app abierta o en segundo plano).
 - **Duraciones realistas:** estima cuánto lleva cada tarea (lavar los platos ≈ 10 min, estudiar ≈ 1 h 30) y aprende de lo que realmente tardás.
 - **Rutina diaria ya cargada:** elegís lo que hacés todos los días en el onboarding y aparece solo; se puede pausar o sumar más en Ajustes.
-- **Mascota y racha:** un pomerania que festeja cada tarea, puntos, niveles y una racha de días seguidos con día de descanso semanal y accesorios que se desbloquean.
+- **Mascota y racha:** un pomerania que festeja cada tarea, puntos, niveles y una racha de días seguidos con día de descanso semanal. Con los puntos se compran accesorios en un **vestidor** (flor, gafas, auriculares, medalla) y otros se ganan por racha; las frases cambian según la hora y el día.
+- **Mover una tarea a mano** (queda fijada) y **terminar por bloques**: si hacés solo una parte, suma igual y el resto se replanifica.
+- **Rutina con días y momento del día** (por ejemplo, ejercicio lunes, miércoles y viernes a la mañana).
+- **Dictado por voz** en la barra de "Sumar tarea" (donde el navegador lo ofrece).
 - **El día como una curva:** tu energía, tus horarios y tus tareas en un solo gráfico; la curva se hunde si marcás cansancio.
 - Modo claro y oscuro, instalable (PWA), funciona sin conexión, exporta e importa tus datos en JSON.
 
@@ -76,9 +91,11 @@ test/         tests
 - [x] Compromisos de un día
 - [x] Recordatorios (web)
 - [x] Identidad visual: curva de energía
-- [ ] Voz
-- [ ] Recordatorios con la app cerrada (requieren la versión Android o un servidor de push)
-- [ ] Publicación en Google Play
+- [x] Voz
+- [x] Mascota con vestidor, rutina diaria y mover a mano
+- [x] Tests e2e en el CI
+- [x] Recordatorios con la app cerrada: puente listo para Android (Capacitor)
+- [ ] Publicación en Google Play (requiere la prueba cerrada de 14 días, ver la guía)
 
 ## Licencia
 
