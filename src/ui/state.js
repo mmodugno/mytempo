@@ -6,7 +6,7 @@ import { effectiveProfile } from "../engine/learn.js";
 import { addDays, startOfDay, ceilTo, minutesOfDay, parseHM } from "../engine/time.js";
 import { nextOccurrence } from "../engine/repeat.js";
 import { estimate, actualFrom } from "../engine/estimate.js";
-import { syncRoutine } from "../store/routine.js";
+import { syncRoutine, patchRoutineTasks } from "../store/routine.js";
 import { streakStats, ACCESSORIES } from "../engine/streak.js";
 
 export const app = {
@@ -222,6 +222,16 @@ export function snoozeTask(id) {
 /** "No hoy": pasa a mañana. Sin culpa, el plan se acomoda solo. */
 export function skipToday(id) {
   updateTask(id, { notBefore: addDays(startOfDay(app.now), 1).toISOString() });
+}
+
+/** Guarda cambios de un ítem de rutina y los pasa a su tarea pendiente. */
+export function updateRoutineItem(item) {
+  const i = app.profile.routine.findIndex((r) => r.id === item.id);
+  if (i < 0) return;
+  app.profile.routine[i] = item;
+  patchRoutineTasks(item, app.tasks);
+  app.store.saveTasks(app.tasks);
+  saveProfile(app.profile);
 }
 
 export function saveProfile(profile) {
