@@ -80,9 +80,12 @@ export async function openApp(browser, base, { profile = exampleProfile, tasks =
   if (capacitor) {
     // Un "Capacitor" de mentira: guarda lo que la app le pide programar, para verificar que lo hace bien.
     await ctx.addInitScript(() => {
+      // El WebView de Android no trae la API Notification del navegador: la app no puede depender de ella.
+      delete window.Notification;
       window.__native = { scheduled: [], cancelled: [], permission: "granted" };
       window.Capacitor = {
         Plugins: {
+          App: { addListener: (name, fn) => (window.__native.listeners = { ...(window.__native.listeners ?? {}), [name]: fn }), exitApp: () => (window.__native.exited = true) },
           LocalNotifications: {
             requestPermissions: async () => ({ display: window.__native.permission }),
             getPending: async () => ({ notifications: window.__native.scheduled.map((n) => ({ id: n.id })) }),

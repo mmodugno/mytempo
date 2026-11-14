@@ -8,7 +8,8 @@
     "test": "node --test \"test/**/*.test.js\"",
     "start": "python3 -m http.server 8080",
     "android:prepare": "sh scripts/build-www.sh && npx cap sync android",
-    "e2e": "node --test \"e2e/**/*.test.js\""
+    "e2e": "node --test \"e2e/**/*.test.js\"",
+    "test:all": "npm test && npm run e2e"
   },
   "devDependencies": {
     "playwright": "^1.65.1"

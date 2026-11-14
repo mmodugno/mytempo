@@ -11,7 +11,7 @@ sistema; si no, usa las notificaciones del navegador como hasta ahora.
 ## Primera vez
 ```sh
 npm install --save-dev @capacitor/core @capacitor/cli @capacitor/android
-npm install @capacitor/local-notifications
+npm install @capacitor/local-notifications @capacitor/app   # @capacitor/app: botón "atrás" de Android
 sh scripts/build-www.sh        # copia la app a www/
 npx cap add android            # crea la carpeta android/ (no se sube al repo)
 npm run android:prepare        # copia www/ y sincroniza plugins

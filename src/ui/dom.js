@@ -79,3 +79,17 @@ export function shortDate(ymdStr) {
   const [y, m, d] = ymdStr.split("-").map(Number);
   return `${DAY_SHORT[new Date(y, m - 1, d).getDay()]} ${d} ${MONTHS[m - 1]}`;
 }
+
+let labelSeq = 0;
+/**
+ * Une cada <label> con su campo (input, select o textarea) cuando está justo al lado dentro de un ".field",
+ * para que el lector de pantalla diga el nombre y tocar la etiqueta enfoque el campo.
+ */
+export function linkLabels(root = document) {
+  for (const label of root.querySelectorAll(".field > label:not([for])")) {
+    const control = label.parentElement.querySelector("input, select, textarea");
+    if (!control) continue;
+    control.id ||= `f${(labelSeq += 1)}`;
+    label.htmlFor = control.id;
+  }
+}

@@ -1,10 +1,10 @@
 // Punto de entrada: arma la carcasa (cabecera, contenido, carga rápida, pestañas) y re-dibuja al cambiar el estado.
 
-import { h, clear, DAY_LONG, MONTHS } from "./dom.js";
+import { h, clear, DAY_LONG, MONTHS, linkLabels } from "./dom.js";
 import { app, init, subscribe, tick, addTask } from "./state.js";
 import { parseQuickTask } from "../engine/parse.js";
 import { speechSupported, createVoice } from "./voice.js";
-import { toast } from "./components.js";
+import { toast, closeSheet, sheetOpen } from "./components.js";
 import { reschedule } from "./notifications.js";
 import { renderAhora } from "./views/ahora.js";
 import { renderTareas, onTareasChange } from "./views/tareas.js";
@@ -128,6 +128,23 @@ document.addEventListener("visibilitychange", () => {
 tick();
 render();
 reschedule();
+
+// Las etiquetas de los formularios (pantallas y hojas) se unen a su campo apenas aparecen.
+let linkPending = false;
+new MutationObserver(() => {
+  if (linkPending) return;
+  linkPending = true;
+  queueMicrotask(() => ((linkPending = false), linkLabels(document.body)));
+}).observe(document.body, { childList: true, subtree: true });
+linkLabels(document.body);
+
+// Botón "atrás" de Android (plugin @capacitor/app): cierra la hoja; si no hay, vuelve a "Ahora"; si ya está ahí, sale de la app.
+const capApp = globalThis.Capacitor?.Plugins?.App;
+capApp?.addListener?.("backButton", () => {
+  if (sheetOpen()) return closeSheet();
+  if (app.tab !== "ahora") return ((app.tab = "ahora"), render());
+  capApp.exitApp?.();
+});
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});
