@@ -4,6 +4,7 @@ import { h, hm, dur, shortDate, DAY_LONG } from "../dom.js";
 import { getPlan, app, effective, activeCheckin } from "../state.js";
 import { dayStrip } from "../components.js";
 import { openOneOff } from "./oneoff.js";
+import { openMoveSheet } from "./movesheet.js";
 
 export function renderSemana() {
   const plan = getPlan();
@@ -22,12 +23,15 @@ export function renderSemana() {
       const fixed = i.type === "fixed";
       const editable = fixed && i.oneOffId;
       const block = editable ? (app.profile.oneOffBlocks ?? []).find((b) => b.id === i.oneOffId) : null;
+      const task = !fixed ? app.tasks.find((t) => t.id === i.taskId) : null;
+      const action = editable ? () => openOneOff(block) : task ? () => openMoveSheet(task, { date: day.date, start: i.start, end: i.end }) : null;
+      const hint = editable ? " · tocá para editar" : task ? (i.pinned ? " · fijada, tocá para mover" : " · tocá para mover") : "";
       section.append(
         h(
-          editable ? "button" : "div",
-          { class: `row ${fixed ? "fixed" : ""}`, onclick: editable ? () => openOneOff(block) : null },
+          action ? "button" : "div",
+          { class: `row ${fixed ? "fixed" : ""}`, onclick: action },
           h("span", { class: "when" }, hm(i.start)),
-          h("span", { class: "what" }, h("b", null, !fixed && h("span", { class: `dot ${i.effort}` }), i.title), h("span", { class: "sub" }, `hasta ${hm(i.end)}${editable ? " · tocá para editar" : ""}`))
+          h("span", { class: "what" }, h("b", null, !fixed && h("span", { class: `dot ${i.effort}` }), i.title), h("span", { class: "sub" }, `hasta ${hm(i.end)}${hint}`))
         )
       );
     });

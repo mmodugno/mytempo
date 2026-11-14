@@ -216,12 +216,37 @@ export function toggleSubtask(taskId, subId) {
 export function snoozeTask(id) {
   const later = new Date(app.now.getTime() + 90 * 60000);
   later.setMinutes(ceilTo(later.getMinutes(), 15), 0, 0);
-  updateTask(id, { notBefore: later.toISOString() });
+  updateTask(id, { notBefore: later.toISOString(), pin: null });
+}
+
+/** Fija una tarea en un día y hora elegidos a mano (el resto del plan se acomoda alrededor). */
+export function moveTask(id, date, start) {
+  updateTask(id, { pin: { date, start }, notBefore: null });
+}
+
+/** Suelta la tarea: vuelve a acomodarla la app. */
+export function unpinTask(id) {
+  updateTask(id, { pin: null });
+}
+
+/** Terminé un bloque de una tarea larga: suma puntos y el plan agenda solo lo que falta. */
+export function finishBlock(id, minutes) {
+  const t = app.tasks.find((x) => x.id === id);
+  if (!t) return;
+  const before = stats();
+  t.partials = [...(t.partials ?? []), { at: app.now.toISOString(), minutes }];
+  t.doneMinutes = (t.doneMinutes ?? 0) + minutes;
+  if (t.doneMinutes >= (t.minutes ?? 30)) return completeTask(id);
+  t.notBefore = null;
+  t.pin = null;
+  version += 1;
+  cheer(before, stats(), id);
+  saveTasks();
 }
 
 /** "No hoy": pasa a mañana. Sin culpa, el plan se acomoda solo. */
 export function skipToday(id) {
-  updateTask(id, { notBefore: addDays(startOfDay(app.now), 1).toISOString() });
+  updateTask(id, { notBefore: addDays(startOfDay(app.now), 1).toISOString(), pin: null });
 }
 
 /** Guarda cambios de un ítem de rutina y los pasa a su tarea pendiente. */
