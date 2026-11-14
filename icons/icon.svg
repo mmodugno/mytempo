@@ -1,5 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#1f2f2c"/>
-  <path d="M96 330 C 150 330, 170 190, 256 190 S 362 330, 416 330" fill="none" stroke="#f5f0e6" stroke-width="26" stroke-linecap="round"/>
-  <circle cx="256" cy="190" r="34" fill="#cf5a2e"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><title>mytempo</title><rect width="512" height="512" rx="112" fill="#F5F0E6"/><path d="M136 322 A120 120 0 0 1 376 322" fill="none" stroke="#CF5A2E" stroke-width="30" stroke-linecap="round"/>
+<path d="M112 340 H400" stroke="#1F2F2C" stroke-width="16" stroke-linecap="round"/>
+<circle cx="168" cy="222" r="32" fill="#E8A838"/></svg>
