@@ -3,6 +3,7 @@
 import { h, clear, DAY_LONG, MONTHS } from "./dom.js";
 import { app, init, subscribe, tick, addTask } from "./state.js";
 import { parseQuickTask } from "../engine/parse.js";
+import { speechSupported, createVoice } from "./voice.js";
 import { toast } from "./components.js";
 import { reschedule } from "./notifications.js";
 import { renderAhora } from "./views/ahora.js";
@@ -40,10 +41,22 @@ const submit = () => {
 };
 input.addEventListener("keydown", (e) => e.key === "Enter" && submit());
 
+let mic = null;
+if (speechSupported()) {
+  mic = h("button", { class: "mic", type: "button", "aria-label": "Dictar tarea por voz", "aria-pressed": "false" }, "🎤");
+  const voice = createVoice({
+    onText: (t) => (input.value = t.slice(0, 120)),
+    onState: (on) => (mic.classList.toggle("on", on), mic.setAttribute("aria-pressed", String(on)), on && toast("Escuchando… decí la tarea.")),
+    onError: (m) => toast(m),
+  });
+  mic.addEventListener("click", voice.toggle);
+}
+
 const composer = h(
   "div",
   { class: "composer" },
   input,
+  mic,
   h("button", { class: "more", "aria-label": "Más opciones de la tarea", onclick: () => ((openTaskSheet(null, parseQuickTask(input.value, app.now))), (input.value = "")) }, "⋯"),
   h("button", { class: "add", onclick: submit }, "Sumar")
 );
