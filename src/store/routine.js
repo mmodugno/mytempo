@@ -51,6 +51,8 @@ export function syncRoutine(routine, tasks, now, newId) {
         priority: 2,
         effort: r.effort,
         repeat: r.repeat,
+        days: r.days?.length ? [...r.days] : null,
+        part: r.part ?? null,
         subtasks: [],
         status: "todo",
         routineId: r.id,
@@ -69,3 +71,20 @@ export function syncRoutine(routine, tasks, now, newId) {
   }
   return { tasks: out, changed };
 }
+
+/** Pasa los cambios de un ítem de rutina a su tarea pendiente (duración, repetición, días, momento). */
+export function patchRoutineTasks(item, tasks) {
+  for (const t of tasks) {
+    if (t.routineId !== item.id || t.status !== "todo") continue;
+    t.title = item.title;
+    t.minutes = item.minutes;
+    t.minutesAuto = false;
+    t.effort = item.effort;
+    t.repeat = item.repeat;
+    t.days = item.days?.length ? [...item.days] : null;
+    t.part = item.part ?? null;
+  }
+  return tasks;
+}
+
+export const PART_LABEL = { morning: "por la mañana", afternoon: "por la tarde", evening: "por la noche" };

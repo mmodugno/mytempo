@@ -302,3 +302,6 @@ main.enter .lane .seg.task { transform-origin: left; animation: grow 600ms 300ms
 .date-pick[hidden] { display: none; }
 .opt-gap { margin-top: 10px; }
 @media (prefers-reduced-motion: reduce) { .seg-thumb, .switch, .switch i, .tile, .tile-check { transition: none; } }
+.routine-main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 4px 0; min-height: 44px; }
+.routine-main b { display: block; }
+.routine-main small { display: block; color: var(--muted); }

@@ -4,7 +4,8 @@ import { h, clear, shortDate, timeField, dur } from "../dom.js";
 import { REPEAT_LABEL } from "../../engine/repeat.js";
 import { estimate } from "../../engine/estimate.js";
 import { segmented, toggle } from "../controls.js";
-import { ROUTINE_CATALOG, fromCatalog, newRoutineId } from "../../store/routine.js";
+import { openRoutineSheet } from "./routinesheet.js";
+import { PART_LABEL, ROUTINE_CATALOG, fromCatalog, newRoutineId } from "../../store/routine.js";
 import { app, saveProfile, reload } from "../state.js";
 import { openOneOff, upcomingOneOffs } from "./oneoff.js";
 import { supported, getSettings, saveSettings, enable, disable, testNotification } from "../notifications.js";
@@ -247,7 +248,7 @@ function routineSection(p, commit) {
         h(
           "div",
           { class: "block-item static" },
-          h("span", null, h("b", null, r.title), h("small", null, `${dur(r.minutes)} · ${REPEAT_LABEL[r.repeat] ?? r.repeat}${r.on ? "" : " · en pausa"}`)),
+          h("button", { class: "routine-main", onclick: () => openRoutineSheet(r) }, h("b", null, r.title), h("small", null, routineMeta(r))),
           h(
             "span",
             { class: "row-actions" },
@@ -299,4 +300,12 @@ function toggleSmall(r, commit, draw) {
   t.classList.add("small");
   t.setAttribute("aria-label", `${r.on ? "Pausar" : "Activar"} ${r.title}`);
   return t;
+}
+
+function routineMeta(r) {
+  const bits = [dur(r.minutes), REPEAT_LABEL[r.repeat] ?? r.repeat];
+  if (r.days?.length) bits.push(daysLabel(r.days));
+  if (r.part) bits.push(PART_LABEL[r.part]);
+  if (!r.on) bits.push("en pausa");
+  return bits.join(" · ");
 }
