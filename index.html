@@ -17,6 +17,15 @@
         if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
         else if (matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.theme = "dark";
       } catch (e) {}
+      // La barra de estado y la de navegación del teléfono toman el color del tema (claro u oscuro).
+      (function () {
+        var meta = document.querySelector('meta[name="theme-color"]');
+        function sync() {
+          meta.setAttribute("content", document.documentElement.dataset.theme === "dark" ? "#11151b" : "#f5f0e6");
+        }
+        sync();
+        new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+      })();
     </script>
   </head>
   <body>
