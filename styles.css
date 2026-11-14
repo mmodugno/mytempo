@@ -249,7 +249,11 @@ main.enter .lane .seg.task { transform-origin: left; animation: grow 600ms 300ms
 .pet-sum { display: flex; align-items: center; gap: 12px; }
 .pet-sum .stats { flex: 1; min-width: 0; }
 .accs { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
-.acc { padding: 6px 12px; border-radius: 999px; border: 1.5px dashed var(--line); color: var(--muted); font-size: 13px; }
+.acc { font: inherit; background: none; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 1.5px dashed var(--line); color: var(--muted); font-size: 13px; }
+.acc.worn { border-color: var(--accent); }
+.acc:disabled { opacity: .7; }
+.closet-head { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; }
+.coins { font-size: 13px; color: var(--muted); }
 .acc.on { border: 1.5px solid rgb(var(--sun)); color: var(--ink); background: rgba(var(--sun), 0.18); }
 .pet-intro { display: flex; align-items: center; gap: 14px; margin: 18px 0 8px; }
 .block-item.static { cursor: default; flex-wrap: wrap; gap: 8px; }

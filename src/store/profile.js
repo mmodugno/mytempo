@@ -23,6 +23,7 @@ export function defaultProfile() {
     oneOffBlocks: [],
     routine: [], // tareas de todos los días / de la semana que ya vienen cargadas
     petName: "Pompón",
+    pet: { bought: [], worn: null, spent: 0 }, // vestidor: accesorios comprados, puestos y monedas gastadas
     streakRest: 1, // días de descanso por semana que no cortan la racha
   };
 }
@@ -81,6 +82,11 @@ export function validateProfile(p) {
     if (!(r.minutes >= 1)) errors.push(`${label}: la duración debe ser de 1 minuto o más.`);
   });
   if (p.streakRest != null && ![0, 1, 2].includes(p.streakRest)) errors.push("Los días de descanso por semana van de 0 a 2.");
+
+  if (p.pet != null) {
+    if (!Array.isArray(p.pet.bought) || !(p.pet.spent >= 0)) errors.push("El vestidor de la mascota está mal formado.");
+    if (p.pet.worn != null && !Array.isArray(p.pet.worn)) errors.push("El vestidor de la mascota está mal formado.");
+  }
 
   return errors;
 }
