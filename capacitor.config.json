@@ -1,0 +1,9 @@
+{
+  "appId": "dev.mmodugno.mytempo",
+  "appName": "mytempo",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "plugins": {
+    "LocalNotifications": { "smallIcon": "ic_stat_icon", "iconColor": "#CF5A2E" }
+  }
+}

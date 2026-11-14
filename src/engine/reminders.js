@@ -48,3 +48,20 @@ export function dueReminders(plan, now, fired = new Set(), { lead = DEFAULT_LEAD
   return upcomingReminders(plan, new Date(now.getTime() - graceMin * 60000), { lead, withinMin: 24 * 60 })
     .filter((r) => r.at <= now && r.startsAt > now && !fired.has(r.key));
 }
+
+/** Id numérico estable (las notificaciones nativas piden un entero) a partir de la clave del recordatorio. */
+export function nativeId(key) {
+  let n = 0;
+  for (const c of key) n = (n * 31 + c.charCodeAt(0)) % 2147483647;
+  return n || 1;
+}
+
+/**
+ * Pasa recordatorios a la forma que espera el plugin de notificaciones locales de Capacitor,
+ * así Android los dispara aunque la app esté cerrada. `format` arma título y texto.
+ */
+export function toNative(reminders, format, max = 60) {
+  return reminders
+    .slice(0, max)
+    .map((r) => ({ id: nativeId(r.key), ...format(r), schedule: { at: r.at, allowWhileIdle: true } }));
+}

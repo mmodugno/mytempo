@@ -1,7 +1,7 @@
 // Service worker: la app funciona sin conexión. Primero intenta la red (para ver siempre la última versión)
 // y si no hay, responde desde el caché.
 
-const CACHE = "mytempo-v10";
+const CACHE = "mytempo-v11";
 const FILES = [
   ".",
   "index.html",

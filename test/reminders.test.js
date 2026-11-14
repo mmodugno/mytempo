@@ -59,3 +59,15 @@ test("dueReminders no repite lo ya avisado", () => {
 test("sin tareas no hay avisos", () => {
   assert.deepEqual(upcomingReminders(plan(profile, [], sab9), sab9), []);
 });
+
+import { toNative, nativeId } from "../src/engine/reminders.js";
+
+test("toNative arma notificaciones del sistema con id estable y hora", () => {
+  const r = { key: "2026-11-09|t1|0|600", at: new Date("2026-11-09T12:50:00Z"), title: "Estudiar" };
+  const [n] = toNative([r], (x) => ({ title: x.title, body: "ok" }));
+  assert.equal(n.id, nativeId(r.key));
+  assert.ok(Number.isInteger(n.id) && n.id > 0 && n.id < 2 ** 31);
+  assert.equal(n.schedule.at, r.at);
+  assert.equal(n.schedule.allowWhileIdle, true);
+  assert.equal(toNative(Array(100).fill(r), () => ({})).length, 60);
+});

@@ -2,14 +2,17 @@
 // Para avisar con la app cerrada hace falta un servidor de push o la versión Android; esta es la parte web.
 
 import { getPlan } from "./state.js";
-import { upcomingReminders, dueReminders, DEFAULT_LEAD_MIN } from "../engine/reminders.js";
+import { upcomingReminders, dueReminders, toNative, DEFAULT_LEAD_MIN } from "../engine/reminders.js";
 import { dur, hm, EFFORT_LABEL } from "./dom.js";
 import { toast } from "./components.js";
 
 const SETTINGS_KEY = "mytempo.notify";
 const FIRED_KEY = "mytempo.fired";
 
-export const supported = () => typeof Notification !== "undefined";
+// En la app de Android (Capacitor) los avisos los programa el sistema y llegan con la app cerrada.
+// En la web se usan las notificaciones del navegador mientras la app está abierta o en segundo plano.
+const native = () => globalThis.Capacitor?.Plugins?.LocalNotifications ?? null;
+export const supported = () => Boolean(native()) || typeof Notification !== "undefined";
 
 export function getSettings() {
   try {
@@ -27,6 +30,11 @@ export function saveSettings(s) {
 /** Pide permiso (tiene que venir de un toque de la persona) y activa los recordatorios. */
 export async function enable() {
   if (!supported()) return "unsupported";
+  if (native()) {
+    const r = await native().requestPermissions();
+    if (r.display === "granted") saveSettings({ ...getSettings(), on: true });
+    return r.display;
+  }
   let perm = Notification.permission;
   if (perm === "default") perm = await Notification.requestPermission();
   if (perm === "granted") saveSettings({ ...getSettings(), on: true });
@@ -47,10 +55,26 @@ function remember(key) {
   localStorage.setItem(FIRED_KEY, JSON.stringify([...fired].slice(-200)));
 }
 
+const describe = (lead) => (r) => {
+  const mins = Math.max(1, Math.round((r.startsAt - r.at) / 60000));
+  const startMin = r.startsAt.getHours() * 60 + r.startsAt.getMinutes();
+  return { title: `En ${Math.min(mins, lead)} min: ${r.title}`, body: `Empieza a las ${hm(startMin)} · ${dur(r.minutes)} · ${EFFORT_LABEL[r.effort]}` };
+};
+
+async function rescheduleNative(s) {
+  const ln = native();
+  const pending = await ln.getPending();
+  if (pending.notifications.length) await ln.cancel({ notifications: pending.notifications.map((n) => ({ id: n.id })) });
+  if (!s.on) return;
+  const list = upcomingReminders(getPlan(), new Date(), { lead: s.lead, withinMin: 7 * 24 * 60 });
+  if (list.length) await ln.schedule({ notifications: toNative(list, describe(s.lead)) });
+}
+
 export function reschedule() {
   timers.forEach(clearTimeout);
   timers = [];
   const s = getSettings();
+  if (native()) return void rescheduleNative(s).catch(() => {});
   if (!s.on || !supported()) return;
   const now = new Date();
   const plan = getPlan();
@@ -76,6 +100,7 @@ async function fire(r, lead) {
 }
 
 async function show(title, body, tag) {
+  if (native()) return void (await native().schedule({ notifications: [{ id: 1, title, body, schedule: { at: new Date(Date.now() + 1500) } }] }));
   if (supported() && Notification.permission === "granted") {
     try {
       const reg = await navigator.serviceWorker?.ready;
