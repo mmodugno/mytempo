@@ -74,3 +74,12 @@ test("niveles, accesorios y siguiente hito", () => {
   assert.equal(nextAccessory(3).id, "scarf");
   assert.equal(nextAccessory(30), null);
 });
+
+test("un bloque terminado cuenta el día y sus puntos, y el resto se suma al completar", () => {
+  const t = { id: "a", status: "todo", minutes: 120, effort: "light", partials: [{ at: new Date(2026, 10, 5, 12).toISOString(), minutes: 60 }] };
+  const s = streakStats([t], FRI);
+  assert.equal(s.last7.find((d) => d.date === "2026-11-05").state, "done");
+  assert.equal(s.total, 60 + dayBonus(1));
+  const full = streakStats([{ ...t, status: "done", doneAt: new Date(2026, 10, 6, 12).toISOString() }], FRI);
+  assert.equal(full.total, 60 + 60 + dayBonus(1) + dayBonus(2)); // 60 del bloque + 60 de lo que faltaba, sin contar dos veces
+});

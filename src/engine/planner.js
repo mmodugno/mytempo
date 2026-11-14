@@ -47,7 +47,19 @@ export function plan(profile, tasks, now, opts = {}) {
   const todo = tasks.filter((t) => (t.status ?? "todo") === "todo");
   const later = todo.filter((t) => t.notBefore && new Date(t.notBefore) >= horizonEnd).map((t) => ({ taskId: t.id, title: t.title, notBefore: t.notBefore }));
   const pending = todo.filter((t) => !later.some((l) => l.taskId === t.id));
-  const chunks = pending.flatMap(toChunks).sort(byUrgency(today));
+  // Lo que la persona fijó a mano (día y hora) se coloca primero; el resto se acomoda alrededor.
+  const nowMin = minutesOfDay(now);
+  const pinnedIds = new Set();
+  for (const t of pending) {
+    if (!t.pin) continue;
+    const day = days.find((d) => d.dateStr === t.pin.date);
+    const minutes = remainingMinutes(t);
+    if (!day || (day.dateStr === ymd(today) && t.pin.start + minutes <= nowMin)) continue; // ya pasó: se vuelve a acomodar sola
+    day.occupied.push({ type: "task", taskId: t.id, title: t.title, effort: t.effort ?? "medium", part: 1, total: 1, pinned: true, start: t.pin.start, end: t.pin.start + minutes });
+    day.placedMinutes += minutes;
+    pinnedIds.add(t.id);
+  }
+  const chunks = pending.filter((t) => !pinnedIds.has(t.id)).flatMap(toChunks).sort(byUrgency(today));
   const unplaced = [];
   const unplacedSeen = new Set();
 
@@ -150,8 +162,13 @@ function dayBudget(day) {
 
 /* ---------- Tareas y orden de colocación ---------- */
 
+/** Lo que falta de una tarea: lo planeado menos lo que ya se hizo por bloques. */
+export function remainingMinutes(task) {
+  return Math.max(MIN_TASK, (task.minutes ?? DEFAULT_MINUTES) - (task.doneMinutes ?? 0));
+}
+
 function toChunks(task) {
-  const minutes = Math.max(MIN_TASK, task.minutes ?? DEFAULT_MINUTES);
+  const minutes = remainingMinutes(task);
   const n = Math.ceil(minutes / MAX_CHUNK);
   const base = Math.floor(minutes / n / 5) * 5; // minutos por parte, múltiplos de 5
   const out = [];
