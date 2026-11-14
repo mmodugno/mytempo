@@ -27,12 +27,13 @@ const EXTRA = {
 };
 
 /**
- * @param {{mood?: "calm"|"happy"|"sleepy", outfit?: {bow?: boolean, scarf?: boolean, hat?: boolean, crown?: boolean, flower?: boolean, glasses?: boolean, headphones?: boolean, medal?: boolean}}} opts
+ * @param {{mood?: "calm"|"happy"|"sleepy", outfit?: {bow?: boolean, scarf?: boolean, hat?: boolean, crown?: boolean, flower?: boolean, glasses?: boolean, headphones?: boolean, medal?: boolean, cape?: boolean, chef?: boolean}}} opts
  * @returns {string} SVG
  */
 export function pomeranianSvg({ mood = "calm", outfit = {} } = {}) {
   const cheeks = `<circle cx="-21" cy="6" r="4.2" fill="#F08A7C" opacity="${mood === "happy" ? 0.6 : 0.45}"/><circle cx="21" cy="6" r="4.2" fill="#F08A7C" opacity="${mood === "happy" ? 0.6 : 0.45}"/>`;
   return `<svg viewBox="-52 -58 104 108" width="100%" height="100%" aria-hidden="true" focusable="false">
+${outfit.cape ? `<path d="M-30 18 Q-48 44 -38 56 L38 56 Q48 44 30 18 Z" fill="#7F77DD"/><path d="M-30 18 Q0 34 30 18" fill="none" stroke="#5F58BD" stroke-width="2"/>` : ""}
 <path d="M-26 -22 L-23 -44 L-6 -30 Z" fill="#E8923D"/><path d="M26 -22 L23 -44 L6 -30 Z" fill="#E8923D"/>
 <path d="M-23 -27 L-21 -38 L-12 -30 Z" fill="#F7C9A0"/><path d="M23 -27 L21 -38 L12 -30 Z" fill="#F7C9A0"/>
 <g fill="#F2A65A"><circle cx="0" cy="0" r="34"/>${FLUFF}</g>
@@ -44,6 +45,7 @@ ${outfit.medal ? `<path d="M-6 30 L0 40 L6 30" fill="none" stroke="#2E7D9A" stro
 ${outfit.scarf ? `<path d="M-23 27 Q0 40 23 27 L21 36 Q0 47 -21 36 Z" fill="#CF5A2E"/><path d="M12 38 l9 -1 l2 9 l-9 1 Z" fill="#B84A22"/>` : ""}
 ${outfit.bow ? `<path d="M23 -25 l-10 -6 v12 z M23 -25 l10 -6 v12 z" fill="#E86A92"/><circle cx="23" cy="-25" r="3.2" fill="#C94874"/>` : ""}
 ${outfit.hat ? `<path d="M-12 -31 L0 -56 L12 -31 Z" fill="#7F77DD"/><circle cx="0" cy="-56" r="3" fill="#E8A838"/>` : ""}
+${outfit.chef ? `<rect x="-14" y="-37" width="28" height="8" rx="2" fill="#fff" stroke="#D8D4CC" stroke-width="1"/><g fill="#fff" stroke="#D8D4CC" stroke-width="1"><circle cx="-9" cy="-44" r="8"/><circle cx="9" cy="-44" r="8"/><circle cx="0" cy="-49" r="9"/></g><rect x="-13" y="-38" width="26" height="6" fill="#fff"/>` : ""}
 ${outfit.crown ? `<path d="M-14 -31 L-14 -47 L-7 -40 L0 -50 L7 -40 L14 -47 L14 -31 Z" fill="#E8A838" stroke="#B9801C" stroke-width="1.2" stroke-linejoin="round"/>` : ""}
 ${outfit.flower ? `<g transform="translate(-23 -26)"><circle cx="0" cy="-5" r="3.6" fill="#F7B6C8"/><circle cx="5" cy="-1.5" r="3.6" fill="#F7B6C8"/><circle cx="3" cy="4.5" r="3.6" fill="#F7B6C8"/><circle cx="-3" cy="4.5" r="3.6" fill="#F7B6C8"/><circle cx="-5" cy="-1.5" r="3.6" fill="#F7B6C8"/><circle cx="0" cy="0" r="2.8" fill="#E8A838"/></g>` : ""}
 ${outfit.headphones ? `<path d="M-33 -4 Q-34 -46 0 -47 Q34 -46 33 -4" fill="none" stroke="#3A3A4A" stroke-width="4" stroke-linecap="round"/><rect x="-39" y="-8" width="9" height="17" rx="4.5" fill="#5B5B72"/><rect x="30" y="-8" width="9" height="17" rx="4.5" fill="#5B5B72"/>` : ""}

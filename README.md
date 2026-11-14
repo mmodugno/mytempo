@@ -85,6 +85,7 @@ docs/         guía de Google Play y capturas
 - **Mascota y racha:** un pomerania que festeja cada tarea, puntos, niveles y una racha de días seguidos con día de descanso semanal. Con los puntos se compran accesorios en un **vestidor** (flor, gafas, auriculares, medalla) y otros se ganan por racha; las frases cambian según la hora y el día.
 - **Mover una tarea a mano** (queda fijada) y **terminar por bloques**: si hacés solo una parte, suma igual y el resto se replanifica.
 - **Rutina con días y momento del día** (por ejemplo, ejercicio lunes, miércoles y viernes a la mañana).
+- **mytempo Plus (en preparación):** accesorios extra con candadito (capa, gorro de chef) y una hoja que cuenta qué incluye. Todavía no se cobra: la compra real se conecta con la versión de Google Play. Los toques se cuentan en el teléfono y solo se envían, de forma anónima, si la persona lo permite (ver [docs/metricas.md](docs/metricas.md)).
 - **Dictado por voz** en la barra de "Sumar tarea" (donde el navegador lo ofrece).
 - **El día como una curva:** tu energía, tus horarios y tus tareas en un solo gráfico; la curva se hunde si marcás cansancio.
 - Modo claro y oscuro, instalable (PWA), funciona sin conexión, exporta e importa tus datos en JSON.

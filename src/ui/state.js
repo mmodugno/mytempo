@@ -9,6 +9,7 @@ import { estimate, actualFrom } from "../engine/estimate.js";
 import { syncRoutine, patchRoutineTasks } from "../store/routine.js";
 import { streakStats, ACCESSORIES } from "../engine/streak.js";
 import { buy as buyItem, toggleWear, newPet } from "../engine/pet.js";
+import { isPlus } from "./plus.js";
 
 export const app = {
   store: null,
@@ -263,14 +264,14 @@ export function updateRoutineItem(item) {
 /** Compra un accesorio con las monedas. Devuelve el resultado para que la UI avise. */
 export function buyAccessory(id) {
   const s = stats();
-  const r = buyItem(app.profile.pet ?? newPet(), id, s.total, s.best);
+  const r = buyItem(app.profile.pet ?? newPet(), id, s.total, s.best, isPlus());
   if (r.ok) saveProfile({ ...app.profile, pet: r.pet });
   return r;
 }
 
 export function wearAccessory(id) {
   const s = stats();
-  saveProfile({ ...app.profile, pet: toggleWear(app.profile.pet ?? newPet(), id, s.best) });
+  saveProfile({ ...app.profile, pet: toggleWear(app.profile.pet ?? newPet(), id, s.best, isPlus()) });
 }
 
 export function saveProfile(profile) {

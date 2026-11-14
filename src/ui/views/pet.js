@@ -2,6 +2,8 @@
 
 import { h, DAY_SHORT } from "../dom.js";
 import { app, stats, buyAccessory, wearAccessory } from "../state.js";
+import { isPlus, track } from "../plus.js";
+import { openPlusSheet } from "./plussheet.js";
 import { pomeranianSvg } from "../mascot.js";
 import { nextAccessory } from "../../engine/streak.js";
 import { ITEMS, coins, owns, wornItems, outfitFor, phrase } from "../../engine/pet.js";
@@ -13,7 +15,7 @@ const days = (n) => `${n} ${n === 1 ? "día" : "días"}`;
 
 function dog(mood, best, size) {
   const el = h("div", { class: `pet-dog ${mood === "happy" ? "cheer" : ""}`, style: `width:${size}px;height:${Math.round(size * 1.04)}px` });
-  el.innerHTML = pomeranianSvg({ mood, outfit: outfitFor(best, app.profile.pet) });
+  el.innerHTML = pomeranianSvg({ mood, outfit: outfitFor(best, app.profile.pet, isPlus()) });
   return el;
 }
 
@@ -78,7 +80,8 @@ export function petSummary() {
 function closet(s) {
   const pet = app.profile.pet;
   const wallet = coins(s.total, pet);
-  const worn = wornItems(s.best, pet);
+  const plus = isPlus();
+  const worn = wornItems(s.best, pet, plus);
   const note = h("p", { class: "muted small", role: "status" }, "");
   const redraw = () => root.replaceWith(closet(s));
   const root = h("div", { class: "closet" }, h("div", { class: "closet-head" }, h("b", null, "Vestidor"), h("span", { class: "coins" }, `${wallet} monedas`)), note);
@@ -87,9 +90,9 @@ function closet(s) {
       "div",
       { class: "accs" },
       ITEMS.map((it) => {
-        const has = owns(it.id, s.best, pet);
+        const has = owns(it.id, s.best, pet, plus);
         const on = worn.includes(it.id);
-        const label = has ? it.label : it.streak != null ? `${it.label} · ${days(it.streak)}` : `${it.label} · ${it.cost}`;
+        const label = has ? it.label : it.plus ? `🔒 ${it.label} · Plus` : it.streak != null ? `${it.label} · ${days(it.streak)}` : `${it.label} · ${it.cost}`;
         return h(
           "button",
           {
@@ -99,6 +102,7 @@ function closet(s) {
             disabled: !has && it.streak != null ? true : null,
             onclick: () => {
               if (has) return wearAccessory(it.id);
+              if (it.plus) return (track("plus_lock_tap", { feature: it.id, from: "vestidor" }), openPlusSheet("vestidor"));
               const r = buyAccessory(it.id);
               if (!r.ok) note.textContent = r.reason === "faltan-monedas" ? `Te faltan ${r.missing} monedas para ${it.label.toLowerCase()}.` : "";
             },

@@ -9,6 +9,8 @@ import { PART_LABEL, ROUTINE_CATALOG, fromCatalog, newRoutineId } from "../../st
 import { app, saveProfile, reload } from "../state.js";
 import { openOneOff, upcomingOneOffs } from "./oneoff.js";
 import { supported, getSettings, saveSettings, enable, disable, testNotification, isNative, active as remindersActive } from "../notifications.js";
+import { isPlus, getMetrics, setConsent } from "../plus.js";
+import { openPlusSheet } from "./plussheet.js";
 import { energyEditor, blockSheet, daysLabel, openSheet, closeSheet, toast } from "../components.js";
 
 export function renderAjustes() {
@@ -55,7 +57,7 @@ export function renderAjustes() {
     h("p", { class: "muted small" }, "El tiempo libre es lo que la app nunca llena con tareas.")
   );
 
-  root.append(routineSection(p, commit), petSection(p, commit));
+  root.append(routineSection(p, commit), petSection(p, commit), plusSection(), privacySection());
 
   // Horarios fijos
   const blocks = h("div");
@@ -279,6 +281,34 @@ function routineSection(p, commit) {
   input.addEventListener("keydown", (ev) => ev.key === "Enter" && (ev.preventDefault(), add()));
   draw();
   return h("div", null, h("div", { class: "eyebrow" }, "Rutina diaria"), box);
+}
+
+/* ---------- Plus y privacidad ---------- */
+
+function plusSection() {
+  return h(
+    "div",
+    null,
+    h("div", { class: "eyebrow" }, "mytempo Plus"),
+    h("p", { class: "muted small" }, isPlus() ? "Tenés Plus activo." : "Extras para Pompón y más funciones en camino. Lo básico siempre es gratis."),
+    h("button", { class: "btn", onclick: () => openPlusSheet("ajustes") }, isPlus() ? "Ver mi Plus" : "Ver qué incluye Plus")
+  );
+}
+
+function privacySection() {
+  const box = h("div");
+  const draw = () => {
+    box.replaceChildren(
+      toggle({
+        checked: getMetrics().consent,
+        label: "Compartir uso anónimo",
+        hint: "Solo cuenta qué botones de Plus se tocan, para saber qué te interesa. Sin nombre, tareas ni horarios. Apagado por defecto.",
+        onChange: (v) => (setConsent(v), draw()),
+      })
+    );
+  };
+  draw();
+  return h("div", null, h("div", { class: "eyebrow" }, "Privacidad"), box);
 }
 
 /* ---------- Mascota y racha ---------- */

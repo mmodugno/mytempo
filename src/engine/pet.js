@@ -13,6 +13,9 @@ export const ITEMS = [
   { id: "glasses", label: "Gafas de sol", slot: "face", cost: 60 },
   { id: "headphones", label: "Auriculares", slot: "head", cost: 90 },
   { id: "medal", label: "Medalla", slot: "chest", cost: 120 },
+  // Solo con mytempo Plus: mientras haya Plus se pueden poner, sin gastar monedas.
+  { id: "cape", label: "Capa", slot: "back", plus: true },
+  { id: "chef", label: "Gorro de chef", slot: "head", plus: true },
 ];
 
 const byId = (id) => ITEMS.find((i) => i.id === id);
@@ -23,9 +26,10 @@ export const newPet = () => ({ bought: [], worn: null, spent: 0 });
 export const coins = (totalPoints, pet) => Math.max(0, totalPoints - (pet?.spent ?? 0));
 
 /** ¿Tiene este accesorio? (de racha: por haber llegado; de tienda: por haberlo comprado) */
-export function owns(id, bestStreak, pet) {
+export function owns(id, bestStreak, pet, plus = false) {
   const it = byId(id);
   if (!it) return false;
+  if (it.plus) return Boolean(plus);
   return it.streak != null ? bestStreak >= it.streak : (pet?.bought ?? []).includes(id);
 }
 
@@ -33,34 +37,34 @@ export function owns(id, bestStreak, pet) {
  * Qué lleva puesto. Mientras no elija nada ("worn" sin definir) lleva todo lo de racha que ganó,
  * como hasta ahora; en cuanto toca el vestidor, manda su elección.
  */
-export function wornItems(bestStreak, pet) {
-  const owned = ITEMS.filter((i) => owns(i.id, bestStreak, pet)).map((i) => i.id);
+export function wornItems(bestStreak, pet, plus = false) {
+  const owned = ITEMS.filter((i) => owns(i.id, bestStreak, pet, plus)).map((i) => i.id);
   const worn = pet?.worn ?? owned.filter((id) => byId(id).streak != null);
   return worn.filter((id) => owned.includes(id));
 }
 
 /** Banderas para dibujar. */
-export function outfitFor(bestStreak, pet) {
-  const worn = wornItems(bestStreak, pet);
+export function outfitFor(bestStreak, pet, plus = false) {
+  const worn = wornItems(bestStreak, pet, plus);
   return Object.fromEntries(ITEMS.map((i) => [i.id, worn.includes(i.id)]));
 }
 
 /** Compra un accesorio de la tienda. Devuelve la mascota nueva o un motivo de rechazo. */
-export function buy(pet, id, totalPoints, bestStreak) {
+export function buy(pet, id, totalPoints, bestStreak, plus = false) {
   const it = byId(id);
   if (!it || it.cost == null) return { ok: false, reason: "no-se-vende" };
   if (owns(id, bestStreak, pet)) return { ok: false, reason: "ya-lo-tiene" };
   if (coins(totalPoints, pet) < it.cost) return { ok: false, reason: "faltan-monedas", missing: it.cost - coins(totalPoints, pet) };
   const next = { ...newPet(), ...pet, bought: [...(pet?.bought ?? []), id], spent: (pet?.spent ?? 0) + it.cost };
-  next.worn = wornItems(bestStreak, pet);
+  next.worn = wornItems(bestStreak, pet, plus);
   next.worn = placeOn(next.worn, id);
   return { ok: true, pet: next };
 }
 
 /** Pone o saca un accesorio. En cada lugar (cabeza, cara…) hay uno solo: ponerse algo saca lo que había. */
-export function toggleWear(pet, id, bestStreak) {
-  if (!owns(id, bestStreak, pet)) return pet;
-  const worn = wornItems(bestStreak, pet);
+export function toggleWear(pet, id, bestStreak, plus = false) {
+  if (!owns(id, bestStreak, pet, plus)) return pet;
+  const worn = wornItems(bestStreak, pet, plus);
   const next = worn.includes(id) ? worn.filter((x) => x !== id) : placeOn(worn, id);
   return { ...newPet(), ...pet, worn: next };
 }
