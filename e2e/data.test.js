@@ -4,7 +4,7 @@ import { writeFile, readFile, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setup } from "./setup.js";
-import { stored, tab, bareProfile, doneTask, exampleProfile } from "./helpers.js";
+import { stored, tab, ready, bareProfile, doneTask, exampleProfile } from "./helpers.js";
 
 const env = setup();
 
@@ -39,7 +39,7 @@ test("importar un respaldo restaura perfil y tareas en otro dispositivo", async 
   const { ctx, page, errors } = await env.open({ profile: null });
   await page.waitForSelector(".onb");
   await page.getByRole("button", { name: "Probar con un perfil de ejemplo" }).click();
-  await page.waitForSelector(".composer");
+  await ready(page);
   await tab(page, "Ajustes");
   await page.locator("input[type=file]").setInputFiles(file);
   await page.waitForFunction(() => JSON.parse(localStorage.getItem("mytempo.profile")).name === "Importada");

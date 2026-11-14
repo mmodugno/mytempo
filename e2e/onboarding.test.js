@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { setup } from "./setup.js";
-import { stored, tab } from "./helpers.js";
+import { stored, tab, ready } from "./helpers.js";
 
 const env = setup();
 
@@ -16,7 +16,7 @@ test("primer uso: el onboarding arma el perfil y deja la app lista", async () =>
     await seguir.click();
   }
   await page.getByRole("button", { name: "Armar mi semana" }).click();
-  await page.waitForSelector(".composer");
+  await ready(page);
   const profile = await stored(page, "mytempo.profile");
   assert.equal(profile.name, "Vale");
   assert.ok(profile.wake && profile.sleep);
@@ -39,7 +39,7 @@ test("'Probar con un perfil de ejemplo' salta directo a la app", async () => {
   const { ctx, page } = await env.open({ profile: null });
   await page.waitForSelector(".onb");
   await page.getByRole("button", { name: "Probar con un perfil de ejemplo" }).click();
-  await page.waitForSelector(".composer");
+  await ready(page);
   assert.equal((await stored(page, "mytempo.profile")).name, "Ejemplo");
   await ctx.close();
 });

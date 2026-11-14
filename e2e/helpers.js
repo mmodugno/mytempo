@@ -110,3 +110,9 @@ export async function openApp(browser, base, { profile = exampleProfile, tasks =
 export const tab = (page, name) => page.getByRole("button", { name, exact: true }).click();
 export const stored = (page, key) => page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? "null"), key);
 export const overflow = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+
+/** Espera a que termine el onboarding: la barra de "Sumar" existe siempre, lo que cambia es que desaparece el overlay. */
+export async function ready(page) {
+  await page.waitForSelector(".onb", { state: "detached" });
+  await page.waitForSelector(".composer");
+}
