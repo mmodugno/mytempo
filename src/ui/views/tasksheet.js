@@ -5,13 +5,16 @@ import { openSheet, closeSheet, toast } from "../components.js";
 import { REPEAT_LABEL } from "../../engine/repeat.js";
 import { app, addTask, updateTask, removeTask } from "../state.js";
 import { estimate } from "../../engine/estimate.js";
+import { segmented, tiles, stepper, quickDate } from "../controls.js";
 
-const MINUTES = [5, 10, 15, 30, 45, 60, 90, 120, 180];
 const PRIORITIES = [
   [1, "Baja"],
   [2, "Normal"],
   [3, "Alta"],
 ];
+const QUICK_MINUTES = [10, 15, 30, 60, 90];
+const quickLabel = (m) => (m >= 60 ? `${m / 60} h`.replace(".5", ",5") : `${m} min`);
+const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
 
 export function openTaskSheet(task, draft = {}) {
   const t = { title: "", minutes: 30, effort: "medium", priority: 2, due: null, repeat: null, ...draft, ...(task ?? {}) };
@@ -26,11 +29,6 @@ export function openTaskSheet(task, draft = {}) {
     if (effortAuto) t.effort = e.effort;
   };
   const title = h("input", { type: "text", value: t.title, placeholder: "¿Qué hay que hacer?", maxLength: 120, onchange: () => (reestimate(), draw()) });
-  const due = h("input", { type: "date", value: t.due ?? "" });
-  const minutesChips = h("div", { class: "chips" });
-  const effortChips = h("div", { class: "chips" });
-  const prioChips = h("div", { class: "chips" });
-  const repeatChips = h("div", { class: "chips" });
   const minutesNote = h("span", { class: "muted" });
   const subList = h("div");
   const subInput = h("input", { type: "text", placeholder: "Agregar un paso…", maxLength: 80, "aria-label": "Nuevo paso" });
@@ -61,25 +59,27 @@ export function openTaskSheet(task, draft = {}) {
   subInput.addEventListener("keydown", (e) => e.key === "Enter" && (e.preventDefault(), addSub()));
   drawSubs();
 
-  const draw = () => {
-    clear(repeatChips);
+  // Controles: cada uno guarda su estado y avisa; acá solo los conectamos con la tarea.
+  const setMinutes = (v) => {
+    t.minutes = v;
+    minutesCtl.set(v);
+    quickCtl.set(v);
     minutesNote.textContent = minutesAuto ? " · estimada, tocá para ajustar" : "";
-    [[null, "No se repite"], ...Object.entries(REPEAT_LABEL)].forEach(([k, label]) =>
-      repeatChips.append(h("button", { class: `chip ${t.repeat === k ? "on" : ""}`, onclick: () => ((t.repeat = k), draw()) }, label))
-    );
-    clear(minutesChips);
-    clear(effortChips);
-    clear(prioChips);
-    MINUTES.forEach((m) =>
-      minutesChips.append(h("button", { class: `chip ${t.minutes === m ? "on" : ""}`, onclick: () => ((t.minutes = m), (minutesAuto = false), draw()) }, m >= 60 ? `${m / 60} h`.replace(".5", ",5") : `${m} min`))
-    );
-    if (!MINUTES.includes(t.minutes)) minutesChips.append(h("button", { class: "chip on" }, `${t.minutes} min`));
-    Object.entries(EFFORT_LABEL).forEach(([k, label]) =>
-      effortChips.append(h("button", { class: `chip ${t.effort === k ? "on" : ""}`, onclick: () => ((t.effort = k), (effortAuto = false), draw()) }, label))
-    );
-    PRIORITIES.forEach(([k, label]) =>
-      prioChips.append(h("button", { class: `chip ${t.priority === k ? "on" : ""}`, onclick: () => ((t.priority = k), draw()) }, label))
-    );
+  };
+  const minutesCtl = stepper({ value: t.minutes, onChange: (v) => ((minutesAuto = false), setMinutes(v)) });
+  const quickCtl = segmented({ options: QUICK_MINUTES.map((m) => ({ value: m, label: quickLabel(m) })), value: t.minutes, compact: true, label: "Duración rápida", onChange: (v) => ((minutesAuto = false), setMinutes(v)) });
+  const effortCtl = segmented({ options: Object.entries(EFFORT_LABEL).map(([k, l]) => ({ value: k, label: cap(l), dot: k })), value: t.effort, label: "Esfuerzo mental", onChange: (v) => ((effortAuto = false), (t.effort = v)) });
+  const prioCtl = segmented({ options: PRIORITIES.map(([value, label]) => ({ value, label })), value: t.priority, label: "Prioridad", onChange: (v) => (t.priority = v) });
+  const dueCtl = quickDate({ value: t.due ?? null, today: app.now, onChange: (v) => (t.due = v) });
+  const repeatCtl = tiles({
+    options: [{ value: null, label: "No se repite", wide: true }, ...Object.entries(REPEAT_LABEL).map(([value, label]) => ({ value, label: cap(label) }))],
+    value: t.repeat ?? null,
+    label: "Repetir",
+    onChange: (v) => (t.repeat = v),
+  });
+  const draw = () => {
+    effortCtl.set(t.effort);
+    setMinutes(t.minutes);
   };
   draw();
 
@@ -87,7 +87,7 @@ export function openTaskSheet(task, draft = {}) {
     const name = title.value.trim();
     if (!name) return void (error.textContent = "Escribí qué hay que hacer.");
     if (subInput.value.trim()) addSub(); // un paso escrito y no agregado todavía no se pierde
-    const data = { title: name, minutes: t.minutes, minutesAuto, effortAuto, effort: t.effort, priority: t.priority, due: due.value || null, repeat: t.repeat ?? null, subtasks: t.subtasks };
+    const data = { title: name, minutes: t.minutes, minutesAuto, effortAuto, effort: t.effort, priority: t.priority, due: t.due || null, repeat: t.repeat ?? null, subtasks: t.subtasks };
     if (task) {
       updateTask(task.id, { ...data, notBefore: null });
       toast("Listo, replanifiqué.");
@@ -101,11 +101,11 @@ export function openTaskSheet(task, draft = {}) {
   openSheet(
     h("h2", null, task ? "Editar tarea" : "Nueva tarea"),
     h("div", { class: "field" }, h("label", null, "Tarea"), title),
-    h("div", { class: "field" }, h("span", { class: "lbl" }, "Cuánto tarda", minutesNote), minutesChips),
-    h("div", { class: "field" }, h("span", { class: "lbl" }, "Esfuerzo mental"), effortChips),
-    h("div", { class: "field" }, h("span", { class: "lbl" }, "Prioridad"), prioChips),
-    h("div", { class: "field" }, h("label", null, "Fecha límite (opcional)"), due),
-    h("div", { class: "field" }, h("span", { class: "lbl" }, "Repetir"), repeatChips),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Cuánto tarda", minutesNote), minutesCtl, h("div", { class: "opt-gap" }, quickCtl)),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Esfuerzo mental"), effortCtl),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Prioridad"), prioCtl),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Fecha límite"), dueCtl),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Repetir"), repeatCtl),
     h("div", { class: "field" }, h("span", { class: "lbl" }, "Pasos (opcional)"), subList, h("div", { class: "sub-add" }, subInput, h("button", { class: "btn quiet", onclick: addSub }, "Agregar"))),
     error,
     h(
