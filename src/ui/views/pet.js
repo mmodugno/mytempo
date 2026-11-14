@@ -1,9 +1,10 @@
 // La mascota en pantalla: tarjeta de "Ahora" (racha, reacción al completar) y bloque del Resumen.
 
 import { h, DAY_SHORT } from "../dom.js";
-import { app, stats } from "../state.js";
+import { app, stats, buyAccessory, wearAccessory } from "../state.js";
 import { pomeranianSvg } from "../mascot.js";
-import { outfit, nextAccessory, ACCESSORIES } from "../../engine/streak.js";
+import { nextAccessory } from "../../engine/streak.js";
+import { ITEMS, coins, owns, wornItems, outfitFor, phrase } from "../../engine/pet.js";
 import { parseYMD } from "../../engine/time.js";
 
 const CHEERS = ["¡Bien ahí!", "¡Otra más!", "¡Eso es!", "¡Qué bien!"];
@@ -12,7 +13,7 @@ const days = (n) => `${n} ${n === 1 ? "día" : "días"}`;
 
 function dog(mood, best, size) {
   const el = h("div", { class: `pet-dog ${mood === "happy" ? "cheer" : ""}`, style: `width:${size}px;height:${Math.round(size * 1.04)}px` });
-  el.innerHTML = pomeranianSvg({ mood, outfit: outfit(best) });
+  el.innerHTML = pomeranianSvg({ mood, outfit: outfitFor(best, app.profile.pet) });
   return el;
 }
 
@@ -42,9 +43,9 @@ export function petCard(awake) {
   if (c) {
     info = h("div", { class: "pet-bubble", role: "status" }, h("b", null, `+${c.points} puntos`), h("span", null, cheerText(c, s)));
   } else if (s.current > 0) {
-    info = h("div", null, h("div", { class: "pet-streak" }, String(s.current), h("small", null, s.current === 1 ? " día seguido" : " días seguidos")), h("div", { class: "pet-sub" }, s.todayDone ? "Hoy ya cumpliste." : "Completá una tarea hoy y sigue."));
+    info = h("div", null, h("div", { class: "pet-streak" }, String(s.current), h("small", null, s.current === 1 ? " día seguido" : " días seguidos")), h("div", { class: "pet-sub" }, phrase({ now: app.now, streak: s.current, todayDone: s.todayDone, awake })));
   } else {
-    info = h("div", null, h("div", { class: "pet-streak small" }, s.best > 0 ? "Empezamos de nuevo" : "Tu racha empieza hoy"), h("div", { class: "pet-sub" }, `${petName()} te espera. Con una tarea alcanza.`));
+    info = h("div", null, h("div", { class: "pet-streak small" }, s.best > 0 ? "Empezamos de nuevo" : "Tu racha empieza hoy"), h("div", { class: "pet-sub" }, phrase({ now: app.now, streak: 0, todayDone: s.todayDone, awake })));
   }
 
   return h(
@@ -67,9 +68,46 @@ export function petSummary() {
     h("div", { class: "pet-sum" }, dog("calm", s.best, 84), h("div", { class: "stats" }, stat(String(s.current), s.current === 1 ? "día seguido" : "días seguidos"), stat(String(s.best), "mejor racha"), stat(String(s.total), "puntos"))),
     dots(s),
     h("p", { class: "muted small" }, `Nivel ${s.level.level}: te faltan ${s.level.to - s.total} puntos para el ${s.level.level + 1}. ` + (s.restLeft > 0 ? "Tenés un día de descanso esta semana: no corta la racha." : s.restLeft === 0 && (app.profile.streakRest ?? 1) > 0 ? "Ya usaste el descanso de esta semana." : "")),
-    h("div", { class: "accs" }, ACCESSORIES.map((a) => h("span", { class: `acc ${s.best >= a.at ? "on" : ""}` }, s.best >= a.at ? a.label : `${a.label} · ${days(a.at)}`)))
+    closet(s)
   );
-  if (next) root.append(h("p", { class: "muted small" }, `Próximo accesorio: ${next.label.toLowerCase()} con ${days(next.at)} seguidos.`));
+  if (next) root.append(h("p", { class: "muted small" }, `Próximo regalo por racha: ${next.label.toLowerCase()} con ${days(next.at)} seguidos.`));
+  return root;
+}
+
+/** Vestidor: los de racha se ganan solos; los otros se compran con monedas. Tocar uno que tenés lo pone o lo saca. */
+function closet(s) {
+  const pet = app.profile.pet;
+  const wallet = coins(s.total, pet);
+  const worn = wornItems(s.best, pet);
+  const note = h("p", { class: "muted small", role: "status" }, "");
+  const redraw = () => root.replaceWith(closet(s));
+  const root = h("div", { class: "closet" }, h("div", { class: "closet-head" }, h("b", null, "Vestidor"), h("span", { class: "coins" }, `${wallet} monedas`)), note);
+  root.append(
+    h(
+      "div",
+      { class: "accs" },
+      ITEMS.map((it) => {
+        const has = owns(it.id, s.best, pet);
+        const on = worn.includes(it.id);
+        const label = has ? it.label : it.streak != null ? `${it.label} · ${days(it.streak)}` : `${it.label} · ${it.cost}`;
+        return h(
+          "button",
+          {
+            type: "button",
+            class: `acc ${has ? "on" : ""} ${on ? "worn" : ""}`,
+            "aria-pressed": has ? String(on) : null,
+            disabled: !has && it.streak != null ? true : null,
+            onclick: () => {
+              if (has) return wearAccessory(it.id);
+              const r = buyAccessory(it.id);
+              if (!r.ok) note.textContent = r.reason === "faltan-monedas" ? `Te faltan ${r.missing} monedas para ${it.label.toLowerCase()}.` : "";
+            },
+          },
+          on ? `✓ ${label}` : label
+        );
+      })
+    )
+  );
   return root;
 }
 
