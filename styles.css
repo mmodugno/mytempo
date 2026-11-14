@@ -141,6 +141,10 @@ main.enter .lane .seg.task { transform-origin: left; animation: grow 600ms 300ms
 .composer input { flex: 1; width: 0; min-width: 0; min-height: 46px; padding: 0 14px; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--paper-2); }
 .composer input:focus { outline: none; border-color: var(--ink); }
 .composer .more { width: 46px; min-height: 46px; border-radius: var(--radius); border: 1.5px solid var(--line); background: none; font-size: 20px; line-height: 1; color: var(--muted); }
+.composer .mic { width: 46px; min-height: 46px; border-radius: var(--radius); border: 1.5px solid var(--line); background: none; font-size: 18px; }
+.composer .mic.on { background: var(--accent); border-color: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .65; } }
+@media (prefers-reduced-motion: reduce) { .composer .mic.on { animation: none; } }
 .composer .add { min-height: 46px; padding: 0 16px; border-radius: var(--radius); border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
 .tabs { display: grid; grid-template-columns: repeat(5, 1fr); padding-bottom: env(safe-area-inset-bottom); background: var(--paper); }
 .tabs button { min-height: 48px; border: 0; background: none; color: var(--muted); font-size: 13.5px; padding: 0; position: relative; }
