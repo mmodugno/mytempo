@@ -57,7 +57,17 @@ export function validateProfile(p) {
     if (!(p.freeMinutes?.[key] >= 0)) errors.push(`El tiempo libre (${key}) debe ser 0 minutos o más.`);
   }
 
-  (p.fixedBlocks ?? []).forEach((b, i) => {
+  // Cada lista tiene que ser una lista de objetos; si viene otra cosa lo decimos en vez de romper.
+  const list = (value, label) => {
+    if (value == null) return [];
+    if (!Array.isArray(value) || value.some((x) => !x || typeof x !== "object")) {
+      errors.push(`${label}: tiene un formato inválido.`);
+      return [];
+    }
+    return value;
+  };
+
+  list(p.fixedBlocks, "Los horarios fijos").forEach((b, i) => {
     const label = `Bloque fijo ${i + 1}${b.title ? ` (${b.title})` : ""}`;
     if (!b.title) errors.push(`${label}: falta el nombre.`);
     if (!Array.isArray(b.days) || b.days.length === 0 || !b.days.every((d) => Number.isInteger(d) && d >= 0 && d <= 6)) {
@@ -68,7 +78,7 @@ export function validateProfile(p) {
     if (s !== null && e !== null && e <= s) errors.push(`${label}: el fin debe ser después del inicio.`);
   });
 
-  (p.oneOffBlocks ?? []).forEach((b, i) => {
+  list(p.oneOffBlocks, "Los compromisos de un día").forEach((b, i) => {
     const label = `Bloque puntual ${i + 1}${b.title ? ` (${b.title})` : ""}`;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(b.date ?? "")) errors.push(`${label}: fecha inválida.`);
     const s = hm(b.start, `${label}, inicio`);
@@ -76,7 +86,7 @@ export function validateProfile(p) {
     if (s !== null && e !== null && e <= s) errors.push(`${label}: el fin debe ser después del inicio.`);
   });
 
-  (p.routine ?? []).forEach((r, i) => {
+  list(p.routine, "La rutina").forEach((r, i) => {
     const label = `Rutina ${i + 1}${r.title ? ` (${r.title})` : ""}`;
     if (!r.id || !r.title) errors.push(`${label}: falta el nombre.`);
     if (!(r.minutes >= 1)) errors.push(`${label}: la duración debe ser de 1 minuto o más.`);
