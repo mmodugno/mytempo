@@ -8,9 +8,12 @@ import { addDays, startOfDay, ymd } from "./time.js";
 
 export const EFFORT_FACTOR = { light: 1, medium: 1.25, hard: 1.5 };
 
+const validDate = (x) => x != null && !Number.isNaN(new Date(x).getTime());
+
 /** Puntos de una tarea: sus minutos, un poco más si exige más. Mínimo 5, máximo 100. */
 export function pointsFor(task) {
-  const raw = (task.minutes ?? 30) * (EFFORT_FACTOR[task.effort] ?? 1.25);
+  const minutes = Number.isFinite(task.minutes) && task.minutes > 0 ? task.minutes : 30;
+  const raw = minutes * (EFFORT_FACTOR[task.effort] ?? 1.25);
   return Math.max(5, Math.min(100, Math.round(raw / 5) * 5));
 }
 
@@ -57,13 +60,14 @@ export function streakStats(tasks, now, { rest = 1 } = {}) {
   let taskPoints = 0;
   for (const t of tasks) {
     // Los bloques terminados de una tarea larga cuentan el día en que se hicieron.
-    const partials = t.partials ?? [];
+    // (se ignora lo que tenga una fecha o unos minutos inválidos: un dato roto no tiene que romper la racha)
+    const partials = (t.partials ?? []).filter((p) => validDate(p.at) && Number.isFinite(p.minutes) && p.minutes > 0);
     for (const p of partials) {
       const key = ymd(new Date(p.at));
       byDay.set(key, (byDay.get(key) ?? 0) + 1);
       taskPoints += pointsFor({ minutes: p.minutes, effort: t.effort });
     }
-    if (t.status !== "done" || !t.doneAt) continue;
+    if (t.status !== "done" || !validDate(t.doneAt)) continue;
     const key = ymd(new Date(t.doneAt));
     byDay.set(key, (byDay.get(key) ?? 0) + 1);
     const rest = (t.minutes ?? 30) - partials.reduce((a, p) => a + p.minutes, 0);
