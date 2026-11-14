@@ -3,6 +3,7 @@
 import { h, clear, shortDate, timeField, dur } from "../dom.js";
 import { REPEAT_LABEL } from "../../engine/repeat.js";
 import { estimate } from "../../engine/estimate.js";
+import { segmented, toggle } from "../controls.js";
 import { ROUTINE_CATALOG, fromCatalog, newRoutineId } from "../../store/routine.js";
 import { app, saveProfile, reload } from "../state.js";
 import { openOneOff, upcomingOneOffs } from "./oneoff.js";
@@ -107,18 +108,10 @@ export function renderAjustes() {
   );
 
   // Energía
-  const learnChips = h("div", { class: "chips" });
-  const drawLearn = () => {
-    clear(learnChips);
-    [[true, "Sí, aprender"], [false, "No, usar solo mi curva"]].forEach(([v, label]) =>
-      learnChips.append(h("button", { class: `chip ${(p.learn !== false) === v ? "on" : ""}`, onclick: () => ((p.learn = v), commit(), drawLearn()) }, label))
-    );
-  };
-  drawLearn();
   root.append(
     h("div", { class: "eyebrow" }, "Tu energía"),
     energyEditor(p.energy, commit),
-    h("div", { class: "field", style: "margin-top:18px" }, h("span", { class: "lbl" }, "¿Ajustar mi curva con lo que dicen mis check-ins?"), learnChips)
+    h("div", { style: "margin-top:18px" }, toggle({ checked: p.learn !== false, label: "Aprender de mis check-ins", hint: "Ajusta tu curva de energía con lo que vas contando.", onChange: (v) => ((p.learn = v), commit()) }))
   );
 
   // Recordatorios
@@ -132,19 +125,23 @@ export function renderAjustes() {
     const cfg = getSettings();
     const active = cfg.on && Notification.permission === "granted";
     notif.append(
-      h("div", { class: "chips" },
-        h("button", { class: `chip ${active ? "on" : ""}`, onclick: async () => {
-          const res = await enable();
-          if (res === "denied") toast("El permiso está bloqueado: habilitalo en la configuración del navegador.");
+      toggle({
+        checked: active,
+        label: "Avisarme antes de cada tarea",
+        hint: "Una notificación unos minutos antes.",
+        onChange: async (v) => {
+          if (v) {
+            const res = await enable();
+            if (res === "denied") toast("El permiso está bloqueado: habilitalo en la configuración del navegador.");
+          } else disable();
           drawNotif();
-        } }, "Avisarme antes de cada tarea"),
-        h("button", { class: `chip ${!active ? "on" : ""}`, onclick: () => (disable(), drawNotif()) }, "Sin avisos")
-      )
+        },
+      })
     );
     if (active) {
       notif.append(
         h("div", { class: "field", style: "margin-top:14px" }, h("span", { class: "lbl" }, "Con cuánta anticipación"),
-          h("div", { class: "chips" }, [5, 10, 15, 30].map((m) => h("button", { class: `chip ${cfg.lead === m ? "on" : ""}`, onclick: () => (saveSettings({ ...cfg, lead: m }), drawNotif()) }, `${m} min`)))
+          segmented({ options: [5, 10, 15, 30].map((m) => ({ value: m, label: `${m} min` })), value: cfg.lead, compact: true, label: "Anticipación", onChange: (m) => (saveSettings({ ...cfg, lead: m }), drawNotif()) })
         ),
         h("button", { class: "btn quiet", onclick: testNotification }, "Probar un aviso")
       );
@@ -158,13 +155,7 @@ export function renderAjustes() {
   const themeNow = localStorage.getItem("mytempo.theme") ?? "auto";
   root.append(
     h("div", { class: "eyebrow" }, "Apariencia"),
-    h(
-      "div",
-      { class: "chips" },
-      [["auto", "Automático"], ["light", "Claro"], ["dark", "Oscuro"]].map(([k, label]) =>
-        h("button", { class: `chip ${themeNow === k ? "on" : ""}`, onclick: () => setTheme(k) }, label)
-      )
-    )
+    segmented({ options: [["auto", "Automático"], ["light", "Claro"], ["dark", "Oscuro"]].map(([value, label]) => ({ value, label })), value: themeNow, label: "Tema", compact: true, onChange: (k) => setTheme(k) })
   );
 
   // Datos
@@ -260,8 +251,8 @@ function routineSection(p, commit) {
           h(
             "span",
             { class: "row-actions" },
-            h("button", { class: `chip ${r.on ? "on" : ""}`, "aria-pressed": r.on, onclick: () => ((r.on = !r.on), commit(), draw()) }, r.on ? "Activa" : "Pausada"),
-            h("button", { class: "chip", "aria-label": `Quitar ${r.title}`, onclick: () => ((p.routine = p.routine.filter((x) => x.id !== r.id)), commit(), draw()) }, "Quitar")
+            toggleSmall(r, commit, draw),
+            h("button", { class: "x", "aria-label": `Quitar ${r.title}`, onclick: () => ((p.routine = p.routine.filter((x) => x.id !== r.id)), commit(), draw()) }, "×")
           )
         )
       )
@@ -293,19 +284,19 @@ function routineSection(p, commit) {
 
 function petSection(p, commit) {
   const name = h("input", { type: "text", value: p.petName ?? "Pompón", maxLength: 20, onchange: () => ((p.petName = name.value.trim() || "Pompón"), commit()) });
-  const chips = h("div", { class: "chips" });
-  const draw = () => {
-    clear(chips);
-    [[0, "Ninguno"], [1, "1 por semana"], [2, "2 por semana"]].forEach(([v, label]) =>
-      chips.append(h("button", { class: `chip ${(p.streakRest ?? 1) === v ? "on" : ""}`, "aria-pressed": (p.streakRest ?? 1) === v, onclick: () => ((p.streakRest = v), commit(), draw()) }, label))
-    );
-  };
-  draw();
+  const rest = segmented({ options: [[0, "Ninguno"], [1, "1 por semana"], [2, "2 por semana"]].map(([value, label]) => ({ value, label })), value: p.streakRest ?? 1, compact: true, label: "Días de descanso", onChange: (v) => ((p.streakRest = v), commit()) });
   return h(
     "div",
     null,
     h("div", { class: "eyebrow" }, "Mascota y racha"),
     h("div", { class: "field" }, h("label", null, "Nombre de tu mascota"), name),
-    h("div", { class: "field" }, h("span", { class: "lbl" }, "Días de descanso que no cortan la racha"), chips)
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Días de descanso que no cortan la racha"), rest)
   );
+}
+
+function toggleSmall(r, commit, draw) {
+  const t = toggle({ checked: r.on, label: "", onChange: (v) => ((r.on = v), commit(), draw()) });
+  t.classList.add("small");
+  t.setAttribute("aria-label", `${r.on ? "Pausar" : "Activar"} ${r.title}`);
+  return t;
 }

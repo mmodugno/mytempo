@@ -1,6 +1,7 @@
 // Piezas reutilizables: hojas inferiores, avisos, franja del día, editores.
 
 import { h, clear, hm, timeField, DAY_SHORT } from "./dom.js";
+import { tiles, dayPicker, quickDate, segmented } from "./controls.js";
 import { parseHM, isWeekend } from "../engine/time.js";
 import { DEFAULT_ENERGY, energyInterp, checkinShift } from "../engine/energy.js";
 import { newBlockId } from "../store/profile.js";
@@ -179,32 +180,30 @@ export function energyEditor(energy, onChange) {
         })
       );
     });
+    const SHORT = { manana: "De mañana", tarde: "De tarde", noche: "Nocturna" };
     root.append(
-      h(
-        "div",
-        { class: "chips", style: "margin-bottom:10px" },
-        Object.entries(PRESETS).map(([key, p]) =>
-          h(
-            "button",
-            {
-              class: "chip",
-              onclick: () => {
-                energy.weekday = [...p.weekday];
-                energy.weekend = [...p.weekend];
-                onChange?.();
-                render();
-              },
-            },
-            p.label
-          )
-        )
-      ),
-      h(
-        "div",
-        { class: "chips" },
-        h("button", { class: `chip ${which === "weekday" ? "on" : ""}`, onclick: () => ((which = "weekday"), render()) }, "Días de semana"),
-        h("button", { class: `chip ${which === "weekend" ? "on" : ""}`, onclick: () => ((which = "weekend"), render()) }, "Fin de semana")
-      ),
+      h("div", { class: "lbl small muted", style: "margin-bottom:6px" }, "Punto de partida"),
+      segmented({
+        options: Object.keys(PRESETS).map((key) => ({ value: key, label: SHORT[key] ?? PRESETS[key].label })),
+        value: null,
+        compact: true,
+        label: "Modelo de energía",
+        onChange: (key) => {
+          energy.weekday = [...PRESETS[key].weekday];
+          energy.weekend = [...PRESETS[key].weekend];
+          onChange?.();
+          render();
+        },
+      }),
+      h("div", { style: "height:14px" }),
+      segmented({
+        options: [{ value: "weekday", label: "Días de semana" }, { value: "weekend", label: "Fin de semana" }],
+        value: which,
+        compact: true,
+        label: "Qué días editás",
+        onChange: (v) => ((which = v), render()),
+      }),
+      h("div", { style: "height:10px" }),
       bars,
       h("div", { class: "bar-hours" }, ["0", "6", "12", "18", "23"].map((x) => h("span", null, x))),
       h("p", { class: "muted small" }, "Más alta = cabeza más clara. Tocá una barra para cambiarla.")
@@ -230,44 +229,16 @@ export function blockSheet(block, { onSave, onDelete }) {
   const title = h("input", { type: "text", value: b.title, placeholder: "Ej: Trabajo, Pilates, Viaje", maxLength: 40 });
   const start = timeField(b.start);
   const end = timeField(b.end);
-  const dayChips = h("div", { class: "chips" });
-  const kindChips = h("div", { class: "chips" });
   const error = h("p", { class: "small", style: "color:var(--accent);min-height:1.2em", role: "alert" });
-
-  const drawDays = () => {
-    clear(dayChips);
-    [1, 2, 3, 4, 5, 6, 0].forEach((d) =>
-      dayChips.append(
-        h(
-          "button",
-          {
-            class: `chip ${b.days.includes(d) ? "on" : ""}`,
-            "aria-pressed": b.days.includes(d),
-            onclick: () => {
-              b.days = b.days.includes(d) ? b.days.filter((x) => x !== d) : [...b.days, d];
-              drawDays();
-            },
-          },
-          DAY_SHORT[d]
-        )
-      )
-    );
-  };
-  const drawKinds = () => {
-    clear(kindChips);
-    KIND_OPTIONS.forEach(([k, label]) =>
-      kindChips.append(h("button", { class: `chip ${b.kind === k ? "on" : ""}`, onclick: () => ((b.kind = k), drawKinds()) }, label))
-    );
-  };
-  drawDays();
-  drawKinds();
+  const dayCtl = dayPicker({ days: b.days, onChange: (d) => (b.days = d) });
+  const kindCtl = tiles({ options: KIND_OPTIONS.map(([value, label], i, all) => ({ value, label, wide: i === all.length - 1 && all.length % 2 === 1 })), value: b.kind, columns: 2, label: "Tipo", onChange: (v) => (b.kind = v) });
 
   return [
     h("h2", null, block ? "Editar horario fijo" : "Nuevo horario fijo"),
     h("div", { class: "field" }, h("label", null, "Nombre"), title),
-    h("div", { class: "field" }, h("span", { class: "lbl" }, "Días"), dayChips),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Días"), dayCtl),
     h("div", { class: "two" }, h("div", { class: "field" }, h("label", null, "Desde"), start), h("div", { class: "field" }, h("label", null, "Hasta"), end)),
-    h("div", { class: "field" }, h("span", { class: "lbl" }, "Tipo"), kindChips),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Tipo"), kindCtl),
     error,
     h(
       "div",
@@ -298,14 +269,14 @@ export function blockSheet(block, { onSave, onDelete }) {
 export function oneOffSheet(block, defaultDate, { onSave, onDelete }) {
   const b = block ? structuredClone(block) : { id: newBlockId(), title: "", kind: "commitment", date: defaultDate, start: "19:00", end: "21:00" };
   const title = h("input", { type: "text", value: b.title, placeholder: "Ej: Curso, turno médico, cumple", maxLength: 40 });
-  const date = h("input", { type: "date", value: b.date });
+  const dateCtl = quickDate({ value: b.date, allowNone: false, today: new Date(), onChange: (v) => (b.date = v) });
   const start = timeField(b.start);
   const end = timeField(b.end);
   const error = h("p", { class: "small", style: "color:var(--accent);min-height:1.2em", role: "alert" });
   return [
     h("h2", null, block ? "Editar compromiso" : "Compromiso de un día"),
     h("div", { class: "field" }, h("label", null, "Nombre"), title),
-    h("div", { class: "field" }, h("label", null, "Día"), date),
+    h("div", { class: "field" }, h("span", { class: "lbl" }, "Día"), dateCtl),
     h("div", { class: "two" }, h("div", { class: "field" }, h("label", null, "Desde"), start), h("div", { class: "field" }, h("label", null, "Hasta"), end)),
     error,
     h(
@@ -317,7 +288,6 @@ export function oneOffSheet(block, defaultDate, { onSave, onDelete }) {
           class: "btn primary",
           onclick: () => {
             b.title = title.value.trim();
-            b.date = date.value;
             b.start = start.value;
             b.end = end.value;
             if (!b.title) return void (error.textContent = "Ponele un nombre.");
