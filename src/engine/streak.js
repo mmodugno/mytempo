@@ -56,10 +56,18 @@ export function streakStats(tasks, now, { rest = 1 } = {}) {
   const byDay = new Map();
   let taskPoints = 0;
   for (const t of tasks) {
+    // Los bloques terminados de una tarea larga cuentan el día en que se hicieron.
+    const partials = t.partials ?? [];
+    for (const p of partials) {
+      const key = ymd(new Date(p.at));
+      byDay.set(key, (byDay.get(key) ?? 0) + 1);
+      taskPoints += pointsFor({ minutes: p.minutes, effort: t.effort });
+    }
     if (t.status !== "done" || !t.doneAt) continue;
     const key = ymd(new Date(t.doneAt));
     byDay.set(key, (byDay.get(key) ?? 0) + 1);
-    taskPoints += pointsFor(t);
+    const rest = (t.minutes ?? 30) - partials.reduce((a, p) => a + p.minutes, 0);
+    taskPoints += pointsFor(partials.length ? { ...t, minutes: rest } : t);
   }
 
   const today = startOfDay(now);

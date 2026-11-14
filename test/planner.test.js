@@ -195,3 +195,32 @@ test("si no entra en su momento del día, la tarea igual se ubica", () => {
   assert.equal(r.unplaced.length, 0);
   assert.ok(itemsOf(r).some((i) => i.taskId === "m"));
 });
+
+test("una tarea fijada a mano queda exactamente en ese día y hora", () => {
+  const r = plan(profile, [task("p", { minutes: 30, effort: "light", pin: { date: "2026-11-11", start: 19 * 60 } })], lunes8);
+  const it = itemsOf(r).find((i) => i.taskId === "p");
+  assert.equal(it.date, "2026-11-11");
+  assert.equal(it.start, 19 * 60);
+  assert.equal(it.end, 19 * 60 + 30);
+  assert.equal(it.pinned, true);
+});
+
+test("las demás tareas se acomodan alrededor de la fijada", () => {
+  const tasks = [task("p", { minutes: 60, effort: "light", pin: { date: "2026-11-09", start: 19 * 60 } }), ...Array.from({ length: 4 }, (_, i) => task(`t${i}`, { minutes: 45, effort: "light" }))];
+  const r = plan(profile, tasks, lunes8);
+  const day = r.days[0].items.filter((i) => i.type !== "break");
+  const sorted = [...day].sort((a, b) => a.start - b.start);
+  for (let i = 1; i < sorted.length; i++) assert.ok(sorted[i].start >= sorted[i - 1].end, `${sorted[i - 1].title} se pisa con ${sorted[i].title}`);
+});
+
+test("una fijación que ya pasó se ignora y la tarea se vuelve a ubicar", () => {
+  const r = plan(profile, [task("p", { minutes: 30, effort: "light", pin: { date: "2026-11-09", start: 8 * 60 } })], new Date(2026, 10, 9, 20, 0));
+  const it = itemsOf(r).find((i) => i.taskId === "p");
+  assert.ok(it && !it.pinned);
+});
+
+test("lo ya hecho por bloques no se vuelve a agendar", () => {
+  const r = plan(profile, [task("g", { minutes: 120, effort: "light", doneMinutes: 90 })], lunes8);
+  const total = itemsOf(r).filter((i) => i.taskId === "g").reduce((a, i) => a + (i.end - i.start), 0);
+  assert.equal(total, 30);
+});

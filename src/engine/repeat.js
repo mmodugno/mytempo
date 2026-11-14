@@ -74,6 +74,8 @@ export function nextOccurrence(task, doneAt) {
     status: "todo",
     doneAt: null,
     notBefore: next.toISOString(),
+    pin: null,
+    doneMinutes: 0,
     due,
     subtasks: (task.subtasks ?? []).map((s) => ({ ...s, done: false })),
   };

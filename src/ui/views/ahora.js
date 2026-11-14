@@ -1,10 +1,11 @@
 // Pantalla principal: qué hacer ahora y lo que sigue. Sin la lista completa.
 
 import { h, hm, dur, EFFORT_LABEL, DAY_LONG } from "../dom.js";
-import { app, getPlan, effective, activeCheckin, toggleSubtask, answerDuration, dismissDuration, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, snoozeTask, skipToday } from "../state.js";
+import { app, getPlan, effective, activeCheckin, toggleSubtask, answerDuration, dismissDuration, checkinDue, addCheckin, setFocusOnLastCheckin, snoozeCheckin, completeTask, finishBlock, snoozeTask, skipToday } from "../state.js";
 import { dayStrip, energyNow, toast } from "../components.js";
 import { parseHM, minutesOfDay } from "../../engine/time.js";
 import { petCard } from "./pet.js";
+import { openMoveSheet } from "./movesheet.js";
 
 export function renderAhora() {
   const plan = getPlan();
@@ -59,6 +60,8 @@ export function renderAhora() {
   return root;
 }
 
+const plan0Date = () => getPlan().days[0].date;
+
 function hero({ awake, current, nextTask, today, nowMin }) {
   const pendingToday = today.items.some((i) => i.type === "task" && i.end > nowMin);
 
@@ -79,7 +82,12 @@ function hero({ awake, current, nextTask, today, nowMin }) {
       h(
         "div",
         { class: "actions" },
-        h("button", { class: "btn primary", onclick: () => (completeTask(t.id)) }, "Hecha"),
+        current.total > 1 || (t.doneMinutes ?? 0) > 0
+          ? [
+              h("button", { class: "btn primary", onclick: () => finishBlock(t.id, current.end - current.start) }, "Terminé este bloque"),
+              h("button", { class: "btn", onclick: () => completeTask(t.id) }, "Toda hecha"),
+            ]
+          : h("button", { class: "btn primary", onclick: () => (completeTask(t.id)) }, "Hecha"),
         h("button", { class: "btn", onclick: () => ((snoozeTask(t.id), toast("Sin drama, la muevo para más tarde."))) }, "Más tarde"),
         h("button", { class: "btn quiet", onclick: () => ((skipToday(t.id), toast("La paso para mañana."))) }, "No hoy")
       )
@@ -101,6 +109,7 @@ function hero({ awake, current, nextTask, today, nowMin }) {
         "div",
         { class: "actions" },
         h("button", { class: "btn", onclick: () => ((skipToday(t.id), toast("La paso para mañana."))) }, "No hoy"),
+        h("button", { class: "btn", onclick: () => openMoveSheet(t, { date: plan0Date(), start: nextTask.start, end: nextTask.end }) }, "Mover"),
         h("button", { class: "btn quiet", onclick: () => (completeTask(t.id)) }, "Ya la hice")
       )
     );
@@ -118,11 +127,12 @@ function hero({ awake, current, nextTask, today, nowMin }) {
 
 function itemRow(i) {
   const fixed = i.type === "fixed";
+  const task = !fixed ? app.tasks.find((t) => t.id === i.taskId) : null;
   return h(
-    "div",
-    { class: `row ${fixed ? "fixed" : ""}` },
+    task ? "button" : "div",
+    { class: `row ${fixed ? "fixed" : ""}`, onclick: task ? () => openMoveSheet(task, { date: plan0Date(), start: i.start, end: i.end }) : null },
     h("span", { class: "when" }, hm(i.start)),
-    h("span", { class: "what" }, h("b", null, !fixed && h("span", { class: `dot ${i.effort}` }), i.title), h("span", { class: "sub" }, `${dur(i.end - i.start)}${fixed ? "" : ` · ${EFFORT_LABEL[i.effort]}`}`))
+    h("span", { class: "what" }, h("b", null, !fixed && h("span", { class: `dot ${i.effort}` }), i.title), h("span", { class: "sub" }, `${dur(i.end - i.start)}${fixed ? "" : ` · ${EFFORT_LABEL[i.effort]}${i.pinned ? " · fijada" : ""}`}`))
   );
 }
 
