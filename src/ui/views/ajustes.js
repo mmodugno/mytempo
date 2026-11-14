@@ -8,7 +8,7 @@ import { openRoutineSheet } from "./routinesheet.js";
 import { PART_LABEL, ROUTINE_CATALOG, fromCatalog, newRoutineId } from "../../store/routine.js";
 import { app, saveProfile, reload } from "../state.js";
 import { openOneOff, upcomingOneOffs } from "./oneoff.js";
-import { supported, getSettings, saveSettings, enable, disable, testNotification } from "../notifications.js";
+import { supported, getSettings, saveSettings, enable, disable, testNotification, isNative, active as remindersActive } from "../notifications.js";
 import { energyEditor, blockSheet, daysLabel, openSheet, closeSheet, toast } from "../components.js";
 
 export function renderAjustes() {
@@ -124,7 +124,7 @@ export function renderAjustes() {
       return;
     }
     const cfg = getSettings();
-    const active = cfg.on && Notification.permission === "granted";
+    const active = remindersActive();
     notif.append(
       toggle({
         checked: active,
@@ -147,7 +147,7 @@ export function renderAjustes() {
         h("button", { class: "btn quiet", onclick: testNotification }, "Probar un aviso")
       );
     }
-    notif.append(h("p", { class: "muted small" }, "Por ahora los avisos suenan mientras la app esté abierta o en segundo plano. Para que lleguen con la app cerrada hace falta la versión Android."));
+    notif.append(h("p", { class: "muted small" }, isNative() ? "Los avisos llegan aunque la app esté cerrada." : "Por ahora los avisos suenan mientras la app esté abierta o en segundo plano. Para que lleguen con la app cerrada hace falta la versión Android."));
   };
   drawNotif();
   root.append(h("div", { class: "eyebrow" }, "Recordatorios"), notif);

@@ -12,6 +12,9 @@ const FIRED_KEY = "mytempo.fired";
 // En la app de Android (Capacitor) los avisos los programa el sistema y llegan con la app cerrada.
 // En la web se usan las notificaciones del navegador mientras la app está abierta o en segundo plano.
 const native = () => globalThis.Capacitor?.Plugins?.LocalNotifications ?? null;
+export const isNative = () => Boolean(native());
+/** ¿Los avisos están activos y con permiso? En Android el permiso se pidió al activarlos; en la web lo dice el navegador. */
+export const active = () => getSettings().on && (isNative() || (typeof Notification !== "undefined" && Notification.permission === "granted"));
 export const supported = () => Boolean(native()) || typeof Notification !== "undefined";
 
 export function getSettings() {

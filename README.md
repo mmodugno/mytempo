@@ -43,9 +43,17 @@ Planificar a mano cada día cansa, y casi siempre termino poniendo tareas pesada
 npm start      # servidor estático en http://localhost:8080
 npm test       # tests unitarios del motor
 npm run e2e    # flujos completos en un navegador real (Playwright; 1ª vez: npx playwright install chromium)
+npm run test:all
 ```
 
 El CI corre los dos en cada push.
+
+## Qué se prueba
+
+- **Motor (unitarios):** plan, energía, aprendizaje, repeticiones, racha y puntos, mascota, rutina, recordatorios, parser y almacenamiento, con casos de borde.
+- **Pruebas de propiedades:** 200 escenarios al azar (con semilla, repetibles) donde el plan tiene que cumplir siempre las mismas reglas: nada se pisa, nada queda en el pasado ni fuera de tus horas despierta, ningún bloque pasa de 90 min, es determinista y no modifica sus datos. También entradas hostiles (texto raro, JSON roto, datos corruptos) que nunca deben romper la app.
+- **Integridad del paquete:** el service worker precachea todos los módulos, todos los `import` existen, el motor no toca el navegador, manifest e íconos válidos, sin datos personales ni claves, sin dependencias externas.
+- **Flujos en navegador real (Playwright, tamaño de celular):** primer uso, tareas, mover a mano, bloques, mascota y vestidor, voz, exportar/importar/borrar, funcionamiento sin conexión, avisos y botón "atrás" de Android (con el plugin simulado), accesibilidad (nombres, zonas táctiles, contraste, teclado), solapas siempre visibles de 320 a 1280 px, modo oscuro y toques al azar.
 
 ## Cómo funciona el plan
 

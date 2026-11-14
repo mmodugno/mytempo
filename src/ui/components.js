@@ -27,6 +27,13 @@ export function closeSheet() {
   scrim = null;
 }
 
+export const sheetOpen = () => scrim !== null;
+
+// Escape cierra la hoja abierta (teclado, y también lo usa el botón "atrás" de Android).
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && scrim) closeSheet();
+});
+
 let toastTimer;
 export function toast(msg) {
   document.querySelector(".toast")?.remove();
